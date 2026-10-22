@@ -114,22 +114,22 @@
       </div>
 
       <nav class="space-y-1">
-        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
           <span>Dashboard</span>
         </button>
 
-        <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-white bg-[#1a1c22] border-l-2 border-white transition">
+        <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-white bg-[#1a1c22] border-l-2 border-white transition cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
           <span>Tasks</span>
         </button>
 
-        <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition">
+        <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
           <span>Settings</span>
         </button>
 
-        <button onclick="switchTab('admin')" id="nav-admin" class="hidden w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-amber-400 hover:text-amber-300 hover:bg-[#18191e] transition">
+        <button onclick="switchTab('admin')" id="nav-admin" class="hidden w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-amber-400 hover:text-amber-300 hover:bg-[#18191e] transition cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
           <span>Admin Hub</span>
         </button>
@@ -175,7 +175,7 @@
 
         <div class="flex items-center gap-2">
           <div class="relative">
-            <button onclick="toggleGroupingMenu()" id="btn-grouping" class="text-xs px-3 py-1 text-zinc-300 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition">
+            <button onclick="toggleGroupingMenu()" id="btn-grouping" class="text-xs px-3 py-1 text-zinc-300 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
               <span id="group-active-label">Group</span>
               <svg class="w-3 h-3 text-zinc-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
@@ -202,7 +202,7 @@
             </div>
           </div>
 
-          <button onclick="promptCreateSprint()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition">
+          <button onclick="promptCreateSprint()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
             <span>+ Sprint Check-in</span>
           </button>
 
@@ -217,7 +217,6 @@
 
     <!-- TASK DETAIL VIEW (SCREENSHOT MATCH) -->
     <section id="view-task-detail" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-[#0e0f12]">
-      <!-- Header bar with breadcrumbs and actions -->
       <header class="h-12 border-b border-[#1e2025] px-6 flex items-center justify-between shrink-0 bg-[#101115]">
         <div class="flex items-center gap-2 text-xs">
           <button onclick="closeTaskDetailView()" title="Back to task list" class="text-zinc-400 hover:text-white mr-1 p-1 cursor-pointer">
@@ -240,11 +239,9 @@
         </div>
       </header>
 
-      <!-- Main Body Split -->
       <div class="flex-1 flex overflow-hidden">
         <!-- Left Side: Task Content & Activity Feed -->
         <div class="flex-1 overflow-y-auto p-8 space-y-8 border-r border-[#1e2025]">
-          <!-- Editable Title & Description -->
           <div class="space-y-3">
             <input 
               type="text" 
@@ -261,24 +258,22 @@
             ></textarea>
           </div>
 
-          <!-- Activity History Section -->
           <div class="pt-6 border-t border-[#1a1c22] space-y-4">
             <div class="flex items-center justify-between">
               <h3 class="text-sm font-bold text-white">Activity</h3>
               <span class="text-xs text-zinc-500" id="detail-last-viewed">You last viewed just now</span>
             </div>
 
-            <!-- Timeline -->
             <div id="detail-activity-timeline" class="space-y-4"></div>
           </div>
         </div>
 
-        <!-- Right Side: Sidebar Controls -->
+        <!-- Right Side: Sidebar Controls (Assign restricted to admin) -->
         <div class="w-80 bg-[#101115] p-6 flex flex-col justify-between overflow-y-auto">
           <div class="space-y-3">
             <!-- Status Button -->
             <div class="relative">
-              <button onclick="toggleDetailDropdown('status')" id="btn-detail-status" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition">
+              <button onclick="toggleDetailDropdown('status')" id="btn-detail-status" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
                 <div class="flex items-center gap-2.5">
                   <span id="detail-icon-status">◌</span>
                   <span id="detail-label-status" class="font-medium">Backlog</span>
@@ -294,21 +289,24 @@
               </div>
             </div>
 
-            <!-- Assignee Button (ASSIGN TO TEAM MEMBERS) -->
+            <!-- Assignee Button (LOCKED FOR NON-ADMINS) -->
             <div class="relative">
               <button onclick="toggleDetailDropdown('assignee')" id="btn-detail-assignee" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition">
                 <div class="flex items-center gap-2.5">
                   <span class="text-zinc-400">👤</span>
                   <span id="detail-label-assignee" class="font-medium">Unassigned</span>
                 </div>
-                <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                <div class="flex items-center gap-1">
+                  <span id="assignee-lock-icon" class="hidden text-[10px] text-zinc-500">🔒</span>
+                  <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
               </button>
               <div id="pop-detail-assignee" class="hidden absolute top-full mt-1 left-0 w-full bg-[#16171d] border border-[#282b36] rounded-xl shadow-2xl p-1 z-50 space-y-0.5 max-h-56 overflow-y-auto"></div>
             </div>
 
             <!-- Story Points Button -->
             <div class="relative">
-              <button onclick="toggleDetailDropdown('points')" id="btn-detail-points" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition">
+              <button onclick="toggleDetailDropdown('points')" id="btn-detail-points" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
                 <div class="flex items-center gap-2.5">
                   <span class="text-zinc-400">⬡</span>
                   <span id="detail-label-points" class="font-medium">1 Point</span>
@@ -326,7 +324,7 @@
 
             <!-- Issue Type Button -->
             <div class="relative">
-              <button onclick="toggleDetailDropdown('type')" id="btn-detail-type" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition">
+              <button onclick="toggleDetailDropdown('type')" id="btn-detail-type" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
                 <div class="flex items-center gap-2.5">
                   <span class="text-zinc-400">⊞</span>
                   <span id="detail-label-type" class="font-medium">Task</span>
@@ -345,7 +343,7 @@
 
             <!-- Sprint Button -->
             <div class="relative">
-              <button onclick="toggleDetailDropdown('sprint')" id="btn-detail-sprint" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition">
+              <button onclick="toggleDetailDropdown('sprint')" id="btn-detail-sprint" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
                 <div class="flex items-center gap-2.5">
                   <span class="text-cyan-400">◯</span>
                   <span id="detail-label-sprint" class="font-medium">No Sprint</span>
@@ -357,7 +355,7 @@
 
             <!-- Priority Button -->
             <div class="relative">
-              <button onclick="toggleDetailDropdown('priority')" id="btn-detail-priority" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition">
+              <button onclick="toggleDetailDropdown('priority')" id="btn-detail-priority" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
                 <div class="flex items-center gap-2.5">
                   <span class="text-zinc-400">一</span>
                   <span id="detail-label-priority" class="font-medium">None</span>
@@ -430,7 +428,7 @@
       </div>
     </section>
 
-    <!-- SETTINGS VIEW -->
+    <!-- SETTINGS VIEW (ADMIN ONLY PROJECT DELETION) -->
     <section id="view-settings" class="hidden flex-1 overflow-y-auto p-10 space-y-8">
       <div class="max-w-3xl space-y-6">
         <div>
@@ -478,9 +476,9 @@
 
         <div class="bg-[#141519] border border-[#2a171a] rounded-xl p-6 space-y-3">
           <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Danger Zone</div>
-          <p class="text-xs text-zinc-500">Permanently delete this project or purge local cache.</p>
+          <p class="text-xs text-zinc-500">Project deletion is restricted to Administrators.</p>
           <div class="flex gap-3">
-            <button onclick="deleteCurrentProject()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
+            <button id="btn-delete-project" onclick="deleteCurrentProject()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
               Delete Project
             </button>
             <button onclick="clearAllData()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition cursor-pointer">
@@ -515,7 +513,6 @@
           </div>
         </div>
 
-        <!-- Create User Card -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
           <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
             <span>+ Create New User Login</span>
@@ -546,7 +543,6 @@
           </form>
         </div>
 
-        <!-- Users Table -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl overflow-hidden">
           <div class="p-4 border-b border-[#1e2025] flex items-center justify-between">
             <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">All Registered Users</span>
@@ -702,7 +698,7 @@
           </div>
         </div>
 
-        <!-- Assignee -->
+        <!-- Assignee (Admin only) -->
         <div class="relative">
           <button type="button" onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">👤</span>
@@ -785,6 +781,15 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
     }
 
+    // Role verification
+    function isCurrentUserAdmin() {
+      const username = getActiveSession();
+      if (!username) return false;
+      if (username === 'atlantis8998') return true;
+      const user = AppState.users.find(u => u.username === username);
+      return user && user.role === 'Admin';
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       loadWorkspace();
       checkAuth();
@@ -814,6 +819,7 @@
       const adminNav = document.getElementById('nav-admin');
       const userDisplay = document.getElementById('active-user-display');
       const roleBadge = document.getElementById('role-indicator-badge');
+      const deleteProjBtn = document.getElementById('btn-delete-project');
 
       if (username) {
         overlay.classList.add('hidden');
@@ -823,10 +829,13 @@
         const role = currentUser ? currentUser.role : 'Developer';
         roleBadge.innerText = role;
 
-        if (username === 'atlantis8998' || role === 'Admin') {
+        const isAdmin = isCurrentUserAdmin();
+        if (isAdmin) {
           adminNav.classList.remove('hidden');
+          if (deleteProjBtn) deleteProjBtn.classList.remove('hidden');
         } else {
           adminNav.classList.add('hidden');
+          if (deleteProjBtn) deleteProjBtn.classList.add('hidden');
         }
       } else {
         overlay.classList.remove('hidden');
@@ -912,6 +921,10 @@
     // -------------------------------------------------------------
     function handleCreateUser(e) {
       e.preventDefault();
+      if (!isCurrentUserAdmin()) {
+        alert("Only administrators can create users.");
+        return;
+      }
       const username = document.getElementById('new-user-username').value.trim();
       const password = document.getElementById('new-user-password').value.trim();
       const role = document.getElementById('new-user-role').value;
@@ -939,6 +952,10 @@
     }
 
     function deleteUser(username) {
+      if (!isCurrentUserAdmin()) {
+        alert("Only administrators can delete user accounts.");
+        return;
+      }
       if (username === 'atlantis8998') {
         alert('Cannot delete the root administrator account.');
         return;
@@ -1056,6 +1073,15 @@
 
       const colorLabel = document.getElementById('setting-color-label');
       if (colorLabel) colorLabel.innerText = (project.color || '#ffbe0b').toUpperCase();
+
+      const deleteBtn = document.getElementById('btn-delete-project');
+      if (deleteBtn) {
+        if (isCurrentUserAdmin()) {
+          deleteBtn.classList.remove('hidden');
+        } else {
+          deleteBtn.classList.add('hidden');
+        }
+      }
     }
 
     function renderProjectsSidebar() {
@@ -1294,7 +1320,7 @@
     }
 
     // -------------------------------------------------------------
-    // TASK DETAIL PANE (SCREENSHOT MATCH)
+    // TASK DETAIL PANE
     // -------------------------------------------------------------
     function openTaskDetailView(taskId) {
       activeDetailTaskId = taskId;
@@ -1335,9 +1361,25 @@
       document.getElementById('detail-label-type').innerText = task.type || 'Task';
       document.getElementById('detail-label-sprint').innerText = task.sprint || 'No Sprint';
       document.getElementById('detail-label-priority').innerText = task.priority || 'None';
+
+      const lockIcon = document.getElementById('assignee-lock-icon');
+      const btnAssignee = document.getElementById('btn-detail-assignee');
+      if (isCurrentUserAdmin()) {
+        if (lockIcon) lockIcon.classList.add('hidden');
+        if (btnAssignee) btnAssignee.classList.add('cursor-pointer');
+      } else {
+        if (lockIcon) lockIcon.classList.remove('hidden');
+        if (btnAssignee) btnAssignee.classList.remove('cursor-pointer');
+      }
     }
 
     function toggleDetailDropdown(type) {
+      // Admin-only restriction for Assignee dropdown
+      if (type === 'assignee' && !isCurrentUserAdmin()) {
+        alert("Only administrators can assign or reassign tasks.");
+        return;
+      }
+
       const pop = document.getElementById(`pop-detail-${type}`);
       const isHidden = pop.classList.contains('hidden');
       closeAllDetailPopups();
@@ -1353,10 +1395,17 @@
 
     function setDetailTaskAttr(attr, value) {
       if (!activeDetailTaskId) return;
+
+      // Admin-only check
+      if (attr === 'assignee' && !isCurrentUserAdmin()) {
+        alert("Only administrators can assign tasks.");
+        return;
+      }
+
       const task = AppState.tasks.find(t => t.id === activeDetailTaskId);
       if (!task) return;
 
-      const activeUser = getActiveSession() || 'Connor Wilkins';
+      const activeUser = getActiveSession() || 'Admin';
       task[attr] = value;
 
       if (!task.activity) task.activity = [];
@@ -1375,6 +1424,10 @@
 
     function renderDetailAssigneeOptions() {
       const pop = document.getElementById('pop-detail-assignee');
+      if (!isCurrentUserAdmin()) {
+        pop.innerHTML = `<div class="p-2 text-[11px] text-zinc-500 text-center">Only administrators can assign tasks.</div>`;
+        return;
+      }
       let html = `
         <button onclick="setDetailTaskAttr('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">
           <span>✕</span> Unassigned
@@ -1426,7 +1479,7 @@
       if (!task.activity || task.activity.length === 0) {
         task.activity = [
           {
-            author: task.createdBy || getActiveSession() || 'Connor Wilkins',
+            author: task.createdBy || getActiveSession() || 'Dev',
             action: 'Created the task',
             time: task.createdAtTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }
@@ -1461,7 +1514,7 @@
       const task = AppState.tasks.find(t => t.id === activeDetailTaskId);
       if (!task) return;
 
-      const activeUser = getActiveSession() || 'Connor Wilkins';
+      const activeUser = getActiveSession() || 'Dev';
       if (!task.activity) task.activity = [];
       task.activity.unshift({
         author: activeUser,
@@ -1496,7 +1549,12 @@
       };
 
       if (field && val) {
-        draftTask[field] = val;
+        if (field === 'assignee' && !isCurrentUserAdmin()) {
+          // Prevent non-admin preset
+          draftTask.assignee = 'Unassigned';
+        } else {
+          draftTask[field] = val;
+        }
       }
 
       document.getElementById('label-modal-status').innerText = draftTask.status;
@@ -1525,6 +1583,10 @@
     }
 
     function toggleModalMenu(attribute) {
+      if (attribute === 'assignee' && !isCurrentUserAdmin()) {
+        alert("Only administrators can assign tasks upon creation.");
+        return;
+      }
       const menu = document.getElementById(`pop-modal-${attribute}`);
       const isHidden = menu.classList.contains('hidden');
       closeAllPopups();
@@ -1532,6 +1594,10 @@
     }
 
     function selectModalAttribute(attr, val) {
+      if (attr === 'assignee' && !isCurrentUserAdmin()) {
+        alert("Only administrators can assign tasks.");
+        return;
+      }
       draftTask[attr] = val;
       document.getElementById(`label-modal-${attr}`).innerText = val;
       closeAllPopups();
@@ -1549,6 +1615,10 @@
 
     function renderModalAssigneeOptions() {
       const pop = document.getElementById('pop-modal-assignee');
+      if (!isCurrentUserAdmin()) {
+        pop.innerHTML = `<div class="p-2 text-[11px] text-zinc-500 text-center">Admin only</div>`;
+        return;
+      }
       let html = `<button type="button" onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ Unassigned</button>`;
       AppState.users.forEach(u => {
         html += `
@@ -1565,8 +1635,11 @@
       const title = document.getElementById('new-task-title').value.trim();
       if (!title) return;
 
-      const activeUser = getActiveSession() || 'Connor Wilkins';
+      const activeUser = getActiveSession() || 'Dev';
       const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Non-admins cannot set assignee on creation
+      const assignedTarget = isCurrentUserAdmin() ? draftTask.assignee : 'Unassigned';
 
       const newTask = {
         id: 'task-' + Date.now(),
@@ -1578,7 +1651,8 @@
         activity: [
           { author: activeUser, action: 'Created the task', time: timeStr }
         ],
-        ...draftTask
+        ...draftTask,
+        assignee: assignedTarget
       };
 
       AppState.tasks.unshift(newTask);
@@ -1678,7 +1752,12 @@
       renderProjectsSidebar();
     }
 
+    // ADMIN ONLY PROJECT DELETION
     function deleteCurrentProject() {
+      if (!isCurrentUserAdmin()) {
+        alert("Permission denied. Only administrators can delete projects.");
+        return;
+      }
       if (AppState.projects.length <= 1) {
         alert('You must have at least one project.');
         return;
