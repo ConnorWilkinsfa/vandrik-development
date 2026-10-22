@@ -40,9 +40,6 @@
 </head>
 <body class="bg-[#0e0f12] text-zinc-200 font-sans antialiased flex h-screen overflow-hidden select-none">
 
-  <!-- ======================== TOAST NOTIFICATION CONTAINER ======================== -->
-  <div id="toast-container" class="fixed bottom-5 right-5 z-[200] flex flex-col gap-2 pointer-events-none"></div>
-
   <!-- ======================== LOGIN / AUTH OVERLAY ======================== -->
   <div id="auth-overlay" class="fixed inset-0 bg-[#0c0d0e] z-[100] flex items-center justify-center p-4">
     <div class="bg-[#141519] border border-[#24262f] w-full max-w-sm rounded-2xl p-7 shadow-2xl space-y-6">
@@ -113,7 +110,7 @@
             <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input type="text" id="global-search-input" oninput="handleSearch(this.value)" placeholder="Search tasks..." class="bg-transparent focus:outline-none text-zinc-200 w-28 placeholder-zinc-500 text-xs"/>
           </div>
-          <span class="text-[10px] bg-[#22242b] text-zinc-400 px-1.5 py-0.5 rounded border border-[#2b2e36]">⌘ + k</span>
+          <span class="text-[10px] bg-[#22242b] text-zinc-400 px-1.5 py-0.5 rounded border border-[#2b2e38]">⌘ + k</span>
         </div>
       </div>
 
@@ -185,28 +182,28 @@
             </button>
 
             <div id="menu-grouping" class="hidden absolute right-0 mt-1.5 w-44 bg-[#141519] border border-[#262831] rounded-xl shadow-2xl p-1 z-30 space-y-0.5">
-              <button onclick="setGrouping('none')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
+              <button onclick="setGrouping('none')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
                 <span class="w-4 text-center">✓</span> No Grouping
               </button>
-              <button onclick="setGrouping('status')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
+              <button onclick="setGrouping('status')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
                 <span class="w-4 text-center">◌</span> Status
               </button>
-              <button onclick="setGrouping('priority')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
+              <button onclick="setGrouping('priority')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
                 <span class="w-4 text-center">⇅</span> Priority
               </button>
-              <button onclick="setGrouping('type')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
+              <button onclick="setGrouping('type')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
                 <span class="w-4 text-center">✳</span> Type
               </button>
-              <button onclick="setGrouping('assignee')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
+              <button onclick="setGrouping('assignee')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
                 <span class="w-4 text-center">👤</span> Assignee
               </button>
-              <button onclick="setGrouping('sprint')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
+              <button onclick="setGrouping('sprint')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
                 <span class="w-4 text-center">◯</span> Sprint
               </button>
             </div>
           </div>
 
-          <button onclick="openCreateSprintModal()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
+          <button onclick="promptCreateSprint()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
             <span>+ Sprint Check-in</span>
           </button>
 
@@ -278,7 +275,7 @@
 
           <div class="space-y-2">
             <label class="text-xs font-semibold text-zinc-400">Sprint Check-in Cadence</label>
-            <select id="setting-project-duration" onchange="updateProjectDuration(this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none cursor-pointer">
+            <select id="setting-project-duration" onchange="updateProjectDuration(this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
               <option value="1 Week">1 Week</option>
               <option value="2 Weeks">2 Weeks</option>
               <option value="3 Weeks">3 Weeks</option>
@@ -307,10 +304,10 @@
           <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Danger Zone</div>
           <p class="text-xs text-zinc-500">Permanently delete this project or purge local cache.</p>
           <div class="flex gap-3">
-            <button onclick="confirmAction('Delete Project', 'Are you sure you want to delete this project and all its tasks?', deleteCurrentProject)" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
+            <button onclick="deleteCurrentProject()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
               Delete Project
             </button>
-            <button onclick="confirmAction('Reset Local Storage', 'Clear local cache and reload from Supabase?', clearAllData)" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition cursor-pointer">
+            <button onclick="clearAllData()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition cursor-pointer">
               Reset Local Storage
             </button>
           </div>
@@ -359,7 +356,7 @@
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Role</label>
-              <select id="new-user-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none cursor-pointer">
+              <select id="new-user-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none">
                 <option value="Developer">Developer</option>
                 <option value="Admin">Admin</option>
                 <option value="Viewer">Viewer</option>
@@ -384,40 +381,6 @@
       </div>
     </section>
   </main>
-
-  <!-- ======================== MODAL: IN-APP CONFIRMATION ======================== -->
-  <div id="modal-confirm" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-[#141518] border border-[#262832] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
-      <div>
-        <h3 class="text-sm font-bold text-white" id="confirm-modal-title">Confirm Action</h3>
-        <p class="text-xs text-zinc-400 mt-1" id="confirm-modal-desc">Are you sure you want to proceed?</p>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button type="button" onclick="closeConfirmModal(false)" class="px-3 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg bg-[#181920] border border-[#242632] transition cursor-pointer">Cancel</button>
-        <button type="button" onclick="closeConfirmModal(true)" id="confirm-modal-action-btn" class="px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition cursor-pointer">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================== MODAL: IN-APP SPRINT CHECK-IN CREATION ======================== -->
-  <div id="modal-create-sprint" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-[#141518] border border-[#262832] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
-      <div>
-        <h3 class="text-sm font-bold text-white">New Sprint Check-In</h3>
-        <p class="text-xs text-zinc-400 mt-1">Schedule a sprint cycle for deliverables tracking.</p>
-      </div>
-      <form onsubmit="handleCreateSprintSubmit(event)" class="space-y-3">
-        <div class="space-y-1">
-          <label class="text-[11px] font-semibold text-zinc-400">Sprint Title</label>
-          <input type="text" id="new-sprint-name" required placeholder="Sprint 2 [2 Weeks Check-in]" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500" />
-        </div>
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="closeCreateSprintModal()" class="px-3 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg bg-[#181920] border border-[#242632] transition cursor-pointer">Cancel</button>
-          <button type="submit" class="px-4 py-1.5 text-xs font-bold text-black bg-cyan-400 hover:bg-cyan-300 rounded-lg transition cursor-pointer">Add Sprint</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- ======================== MODAL: PASSCODE VERIFICATION (0107) ======================== -->
   <div id="modal-passcode-gate" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
@@ -569,7 +532,7 @@
             <span class="text-zinc-400">👤</span>
             <span id="label-modal-assignee">Unassigned</span>
           </button>
-          <div id="pop-modal-assignee" class="hidden absolute bottom-full mb-1 left-0 w-44 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5 max-h-48 overflow-y-auto"></div>
+          <div id="pop-modal-assignee" class="hidden absolute bottom-full mb-1 left-0 w-44 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5"></div>
         </div>
 
         <!-- Sprint -->
@@ -591,21 +554,25 @@
 
   <!-- ======================== APPLICATION LOGIC ======================== -->
   <script>
-    // Live Supabase Configuration
+    // Supabase Credentials
     const SUPABASE_URL = "https://xlbhnzbpljpkxlkxehqq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYmhuemJwbGpwa3hsa3hlaHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDI4MzYsImV4cCI6MjEwODI3ODgzNn0.k__ntBUjHHR8VVpSFP41u0G9HRlPJeohzhT452vw5sw";
 
-    let supabase = null;
-    if (window.supabase) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Renamed client instance to prevent identifier collision with window.supabase
+    let supabaseClient = null;
+    if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (err) {
+        console.warn("Supabase initialization error, running in local-only fallback mode:", err);
+      }
     }
 
-    const STORAGE_KEY = 'vandrik_full_workspace_v4';
+    const STORAGE_KEY = 'vandrik_full_workspace_v3';
     const AUTH_SESSION_KEY = 'vandrik_active_user_session';
     const PASSWORDS_REVEALED_KEY = 'vandrik_passwords_revealed_session';
     const MASTER_PIN = "0107";
 
-    // Pre-seeded users list
     const INITIAL_WORKSPACE = {
       activeProjectId: 'proj-1',
       groupingMode: 'none',
@@ -648,59 +615,13 @@
       sprint: 'No Sprint'
     };
 
-    // -------------------------------------------------------------
-    // TOAST NOTIFICATIONS
-    // -------------------------------------------------------------
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = `px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xl flex items-center gap-2 border transition-all duration-300 pointer-events-auto transform translate-y-2 opacity-0 ${
-        type === 'success' ? 'bg-[#12281e] text-emerald-300 border-emerald-500/30' :
-        type === 'error' ? 'bg-[#2a1318] text-rose-300 border-rose-500/30' :
-        'bg-[#171922] text-zinc-200 border-[#2b2e3c]'
-      }`;
-      toast.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ'}</span> <span>${escapeHtml(message)}</span>`;
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-      }, 10);
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
-
-    // -------------------------------------------------------------
-    // CONFIRMATION MODAL
-    // -------------------------------------------------------------
-    let pendingConfirmAction = null;
-    function confirmAction(title, desc, onConfirm) {
-      document.getElementById('confirm-modal-title').innerText = title;
-      document.getElementById('confirm-modal-desc').innerText = desc;
-      pendingConfirmAction = onConfirm;
-      document.getElementById('modal-confirm').classList.remove('hidden');
-    }
-
-    function closeConfirmModal(accepted) {
-      document.getElementById('modal-confirm').classList.add('hidden');
-      if (accepted && pendingConfirmAction) {
-        pendingConfirmAction();
-      }
-      pendingConfirmAction = null;
-    }
-
-    // -------------------------------------------------------------
-    // DATA LAYER & DATABASE SYNC
-    // -------------------------------------------------------------
     async function loadWorkspaceFromCloudOrLocal() {
-      if (supabase) {
+      if (supabaseClient) {
         try {
           const [uRes, pRes, tRes] = await Promise.all([
-            supabase.from('users').select('*'),
-            supabase.from('projects').select('*'),
-            supabase.from('tasks').select('*')
+            supabaseClient.from('users').select('*'),
+            supabaseClient.from('projects').select('*'),
+            supabaseClient.from('tasks').select('*')
           ]);
 
           if (!uRes.error && uRes.data && uRes.data.length > 0) {
@@ -733,7 +654,7 @@
           localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
           return;
         } catch (err) {
-          console.warn("Supabase fetch failed, falling back to local storage:", err);
+          console.warn("Supabase fetch error, fallback to local:", err);
         }
       }
 
@@ -751,9 +672,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
     }
 
-    // -------------------------------------------------------------
-    // INITIALIZATION & REALTIME EVENTS
-    // -------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', async () => {
       await loadWorkspaceFromCloudOrLocal();
       checkAuth();
@@ -769,24 +687,29 @@
       renderAdminUsers();
       updatePasswordVisibilityUI();
 
-      if (supabase) {
-        supabase
-          .channel('schema-db-changes')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'tasks' },
-            async () => {
-              await loadWorkspaceFromCloudOrLocal();
-              renderTasksFeed();
-              renderDashboardMetrics();
-            }
-          )
-          .subscribe();
+      // Real-time task listener across devices
+      if (supabaseClient) {
+        try {
+          supabaseClient
+            .channel('public:tasks')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'tasks' },
+              async () => {
+                await loadWorkspaceFromCloudOrLocal();
+                renderTasksFeed();
+                renderDashboardMetrics();
+              }
+            )
+            .subscribe();
+        } catch(e) {
+          console.warn("Realtime sync channel could not be opened:", e);
+        }
       }
     });
 
     // -------------------------------------------------------------
-    // AUTHENTICATION LOGIC
+    // AUTHENTICATION
     // -------------------------------------------------------------
     function getActiveSession() {
       return sessionStorage.getItem(AUTH_SESSION_KEY);
@@ -820,31 +743,16 @@
 
     async function handleLogin(e) {
       if (e && e.preventDefault) e.preventDefault();
-      
       const u = document.getElementById('login-username').value.trim();
       const p = document.getElementById('login-password').value.trim();
       const errBox = document.getElementById('login-error');
 
       let matched = AppState.users.find(user => user.username === u && user.password === p);
 
-      if (!matched && supabase) {
-        try {
-          const { data } = await supabase.from('users').select('*').eq('username', u).eq('password', p).single();
-          if (data) {
-            matched = data;
-            if (!AppState.users.some(x => x.username === data.username)) {
-              AppState.users.push(data);
-              saveWorkspace();
-            }
-          }
-        } catch (err) {}
-      }
-
       if (matched) {
         sessionStorage.setItem(AUTH_SESSION_KEY, matched.username);
         if (errBox) errBox.classList.add('hidden');
         checkAuth();
-        showToast(`Welcome back, ${matched.username}!`, 'success');
       } else {
         if (errBox) errBox.classList.remove('hidden');
       }
@@ -858,7 +766,7 @@
     }
 
     // -------------------------------------------------------------
-    // PASSCODE GATE (0107)
+    // PASSWORD PROTECTION (0107 PIN)
     // -------------------------------------------------------------
     function arePasswordsRevealed() {
       return sessionStorage.getItem(PASSWORDS_REVEALED_KEY) === 'true';
@@ -876,14 +784,13 @@
     }
 
     function handlePasscodeSubmit(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
       const code = document.getElementById('admin-passcode-input').value.trim();
       if (code === MASTER_PIN) {
         sessionStorage.setItem(PASSWORDS_REVEALED_KEY, 'true');
         closePasscodeModal();
         updatePasswordVisibilityUI();
         renderAdminUsers();
-        showToast('Password access authorized.', 'success');
       } else {
         document.getElementById('passcode-error').classList.remove('hidden');
       }
@@ -893,7 +800,6 @@
       sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
       updatePasswordVisibilityUI();
       renderAdminUsers();
-      showToast('Passwords hidden.', 'info');
     }
 
     function updatePasswordVisibilityUI() {
@@ -909,10 +815,10 @@
     }
 
     // -------------------------------------------------------------
-    // USER REGISTRATION & ADMIN MANAGEMENT
+    // ADMIN HUB / USER MANAGEMENT
     // -------------------------------------------------------------
     async function handleCreateUser(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
       const username = document.getElementById('new-user-username').value.trim();
       const password = document.getElementById('new-user-password').value.trim();
       const role = document.getElementById('new-user-role').value;
@@ -920,7 +826,7 @@
       if (!username || !password) return;
 
       if (AppState.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-        showToast('A user with that username already exists.', 'error');
+        alert('A user with that username already exists.');
         return;
       }
 
@@ -934,36 +840,32 @@
       AppState.users.push(newUser);
       saveWorkspace();
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          await supabase.from('users').upsert({ username, password, role });
-        } catch (e) {
-          console.error("Supabase user sync error:", e);
-        }
+          await supabaseClient.from('users').upsert({ username, password, role });
+        } catch (e) {}
       }
 
       document.getElementById('new-user-username').value = '';
       document.getElementById('new-user-password').value = '';
       renderAdminUsers();
-      showToast(`User "${username}" created!`, 'success');
     }
 
-    function deleteUser(username) {
+    async function deleteUser(username) {
       if (username === 'atlantis8998') {
-        showToast('Cannot delete the root administrator account.', 'error');
+        alert('Cannot delete the root administrator account.');
         return;
       }
-      confirmAction('Delete User Login', `Are you sure you want to delete login "${username}"?`, async () => {
+      if (confirm(`Are you sure you want to delete login "${username}"?`)) {
         AppState.users = AppState.users.filter(u => u.username !== username);
         saveWorkspace();
-        if (supabase) {
+        if (supabaseClient) {
           try {
-            await supabase.from('users').delete().eq('username', username);
+            await supabaseClient.from('users').delete().eq('username', username);
           } catch(e) {}
         }
         renderAdminUsers();
-        showToast(`User ${username} deleted.`, 'info');
-      });
+      }
     }
 
     function renderAdminUsers() {
@@ -1007,7 +909,7 @@
     }
 
     // -------------------------------------------------------------
-    // NAVIGATION & VIEW SWITCHING
+    // NAVIGATION & PROJECTS
     // -------------------------------------------------------------
     function switchTab(tabId) {
       ['tasks', 'dashboard', 'settings', 'admin'].forEach(id => {
@@ -1097,7 +999,7 @@
     }
 
     async function handleCreateProjectSubmit(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
       const name = document.getElementById('new-project-name').value.trim();
       const duration = document.getElementById('new-project-duration').value;
       if (!name) return;
@@ -1117,9 +1019,9 @@
       AppState.activeProjectId = newProj.id;
       saveWorkspace();
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          await supabase.from('projects').upsert({
+          await supabaseClient.from('projects').upsert({
             id: newProj.id,
             name: newProj.name,
             sprint_duration: newProj.sprintDuration,
@@ -1127,7 +1029,7 @@
             color: newProj.color,
             sprints: newProj.sprints
           });
-        } catch (err) {}
+        } catch(e) {}
       }
 
       closeCreateProjectModal();
@@ -1135,11 +1037,10 @@
       renderProjectsSidebar();
       renderTasksFeed();
       renderDashboardMetrics();
-      showToast(`Project "${name}" created!`, 'success');
     }
 
     // -------------------------------------------------------------
-    // TASKS & REAL-TIME PERSISTENCE
+    // TASKS & GROUPING
     // -------------------------------------------------------------
     function toggleGroupingMenu() {
       document.getElementById('menu-grouping').classList.toggle('hidden');
@@ -1217,7 +1118,7 @@
 
     function renderTaskRow(task) {
       const statusIcon = getStatusIcon(task.status);
-      const pointsNum = task.points.split(' ')[0];
+      const pointsNum = task.points ? task.points.split(' ')[0] : '1';
 
       return `
         <div class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] rounded-xl px-4 py-2.5 flex items-center justify-between gap-4 transition group">
@@ -1228,9 +1129,9 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <span class="text-[11px] px-2 py-0.5 rounded bg-[#181920] border border-[#252732] text-zinc-300">⊞ ${task.type}</span>
-            <span class="text-[11px] text-zinc-400">👤 ${escapeHtml(task.assignee)}</span>
-            ${task.sprint !== 'No Sprint' ? `<span class="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.5 rounded">◯ ${escapeHtml(task.sprint.split(' ')[0])}</span>` : ''}
+            <span class="text-[11px] px-2 py-0.5 rounded bg-[#181920] border border-[#252732] text-zinc-300">⊞ ${task.type || 'Task'}</span>
+            <span class="text-[11px] text-zinc-400">👤 ${escapeHtml(task.assignee || 'Unassigned')}</span>
+            ${task.sprint && task.sprint !== 'No Sprint' ? `<span class="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.5 rounded">◯ ${escapeHtml(task.sprint.split(' ')[0])}</span>` : ''}
             <button onclick="deleteTask('${task.id}')" title="Delete Task" class="text-zinc-600 hover:text-rose-400 text-xs ml-1 cursor-pointer">✕</button>
           </div>
         </div>
@@ -1257,10 +1158,10 @@
       renderTasksFeed();
       renderDashboardMetrics();
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          await supabase.from('tasks').update({ status: task.status }).eq('id', taskId);
-        } catch (err) {}
+          await supabaseClient.from('tasks').update({ status: task.status }).eq('id', taskId);
+        } catch(e) {}
       }
     }
 
@@ -1270,12 +1171,11 @@
       renderTasksFeed();
       renderDashboardMetrics();
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          await supabase.from('tasks').delete().eq('id', taskId);
-        } catch (err) {}
+          await supabaseClient.from('tasks').delete().eq('id', taskId);
+        } catch(e) {}
       }
-      showToast('Task deleted.', 'info');
     }
 
     function getGroupBuckets(mode) {
@@ -1320,16 +1220,18 @@
         return buckets;
       } else if (mode === 'sprint') {
         const sprintBuckets = [{ name: 'No Sprint', icon: '◯', targetField: 'sprint', targetValue: 'No Sprint', match: t => t.sprint === 'No Sprint' }];
-        activeProj.sprints.forEach(sp => {
-          sprintBuckets.push({
-            name: sp.name,
-            icon: '◯',
-            colorClass: 'text-cyan-400',
-            targetField: 'sprint',
-            targetValue: sp.name,
-            match: t => t.sprint === sp.name
+        if (activeProj && activeProj.sprints) {
+          activeProj.sprints.forEach(sp => {
+            sprintBuckets.push({
+              name: sp.name,
+              icon: '◯',
+              colorClass: 'text-cyan-400',
+              targetField: 'sprint',
+              targetValue: sp.name,
+              match: t => t.sprint === sp.name
+            });
           });
-        });
+        }
         return sprintBuckets;
       }
       return [];
@@ -1394,9 +1296,11 @@
       const proj = getCurrentProject();
       const sprintPop = document.getElementById('pop-modal-sprint');
       let html = `<button type="button" onclick="selectModalAttribute('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ No Sprint</button>`;
-      proj.sprints.forEach(sp => {
-        html += `<button type="button" onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded cursor-pointer">◯ ${escapeHtml(sp.name)}</button>`;
-      });
+      if (proj && proj.sprints) {
+        proj.sprints.forEach(sp => {
+          html += `<button type="button" onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded cursor-pointer">◯ ${escapeHtml(sp.name)}</button>`;
+        });
+      }
       sprintPop.innerHTML = html;
     }
 
@@ -1432,9 +1336,9 @@
       renderTasksFeed();
       renderDashboardMetrics();
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          const { error } = await supabase.from('tasks').upsert({
+          await supabaseClient.from('tasks').upsert({
             id: newTask.id,
             project_id: newTask.projectId,
             title: newTask.title,
@@ -1446,13 +1350,10 @@
             assignee: newTask.assignee,
             sprint: newTask.sprint
           });
-          if (error) console.error("Supabase task sync error:", error);
         } catch (err) {
           console.error("Failed to sync task to Supabase:", err);
         }
       }
-
-      showToast(`Task "${title}" created!`, 'success');
     }
 
     function renderDashboardMetrics() {
@@ -1480,7 +1381,7 @@
 
       const sprintBox = document.getElementById('dash-sprints-list');
       const proj = getCurrentProject();
-      if (!proj || proj.sprints.length === 0) {
+      if (!proj || !proj.sprints || proj.sprints.length === 0) {
         sprintBox.innerHTML = '<div class="text-zinc-500">No active sprint cycles. Click "+ Sprint Check-in" to schedule one.</div>';
       } else {
         sprintBox.innerHTML = proj.sprints.map(sp => {
@@ -1498,88 +1399,57 @@
       }
     }
 
-    // -------------------------------------------------------------
-    // SPRINT CREATION
-    // -------------------------------------------------------------
-    function openCreateSprintModal() {
+    async function promptCreateSprint() {
       const proj = getCurrentProject();
-      const count = proj.sprints.length + 1;
+      const count = (proj.sprints ? proj.sprints.length : 0) + 1;
       const cadence = proj.sprintDuration || '2 Weeks';
-      document.getElementById('new-sprint-name').value = `Sprint ${count} [${cadence} Check-in]`;
-      document.getElementById('modal-create-sprint').classList.remove('hidden');
-    }
-
-    function closeCreateSprintModal() {
-      document.getElementById('modal-create-sprint').classList.add('hidden');
-    }
-
-    async function handleCreateSprintSubmit(e) {
-      e.preventDefault();
-      const name = document.getElementById('new-sprint-name').value.trim();
-      const proj = getCurrentProject();
-      const cadence = proj.sprintDuration || '2 Weeks';
-
-      if (name) {
+      const name = prompt(`Enter name for Sprint ${count} (Cadence: ${cadence}):`, `Sprint ${count} [${cadence} Check-in]`);
+      if (name && name.trim()) {
+        if (!proj.sprints) proj.sprints = [];
         proj.sprints.push({ 
           id: 'sp-' + Date.now(), 
-          name: name, 
+          name: name.trim(), 
           duration: cadence
         });
         saveWorkspace();
-
-        if (supabase) {
+        if (supabaseClient) {
           try {
-            await supabase.from('projects').update({ sprints: proj.sprints }).eq('id', proj.id);
-          } catch(err) {}
+            await supabaseClient.from('projects').update({ sprints: proj.sprints }).eq('id', proj.id);
+          } catch(e) {}
         }
-
         renderDashboardMetrics();
-        closeCreateSprintModal();
-        showToast('Sprint cycle added!', 'success');
       }
     }
 
-    // -------------------------------------------------------------
-    // PROJECT SETTINGS
-    // -------------------------------------------------------------
     async function updateProjectName(val) {
       if (!val.trim()) return;
       const proj = getCurrentProject();
       proj.name = val.trim();
       saveWorkspace();
+      if (supabaseClient) {
+        try { await supabaseClient.from('projects').update({ name: proj.name }).eq('id', proj.id); } catch(e){}
+      }
       syncProjectHeader();
       renderProjectsSidebar();
-
-      if (supabase) {
-        try {
-          await supabase.from('projects').update({ name: proj.name }).eq('id', proj.id);
-        } catch(err) {}
-      }
     }
 
     async function updateProjectDuration(val) {
       const proj = getCurrentProject();
       proj.sprintDuration = val;
       saveWorkspace();
+      if (supabaseClient) {
+        try { await supabaseClient.from('projects').update({ sprint_duration: proj.sprintDuration }).eq('id', proj.id); } catch(e){}
+      }
       syncProjectHeader();
       renderDashboardMetrics();
-
-      if (supabase) {
-        try {
-          await supabase.from('projects').update({ sprint_duration: proj.sprintDuration }).eq('id', proj.id);
-        } catch(err) {}
-      }
     }
 
     async function updateProjectDesc(val) {
       const proj = getCurrentProject();
       proj.description = val.trim();
       saveWorkspace();
-
-      if (supabase) {
-        try {
-          await supabase.from('projects').update({ description: proj.description }).eq('id', proj.id);
-        } catch(err) {}
+      if (supabaseClient) {
+        try { await supabaseClient.from('projects').update({ description: proj.description }).eq('id', proj.id); } catch(e){}
       }
     }
 
@@ -1588,44 +1458,42 @@
       proj.color = val;
       document.getElementById('setting-color-label').innerText = val.toUpperCase();
       saveWorkspace();
-      renderProjectsSidebar();
-
-      if (supabase) {
-        try {
-          await supabase.from('projects').update({ color: proj.color }).eq('id', proj.id);
-        } catch(err) {}
+      if (supabaseClient) {
+        try { await supabaseClient.from('projects').update({ color: proj.color }).eq('id', proj.id); } catch(e){}
       }
+      renderProjectsSidebar();
     }
 
     async function deleteCurrentProject() {
       if (AppState.projects.length <= 1) {
-        showToast('You must have at least one project.', 'error');
+        alert('You must have at least one project.');
         return;
       }
       const proj = getCurrentProject();
-      AppState.tasks = AppState.tasks.filter(t => t.projectId !== AppState.activeProjectId);
-      AppState.projects = AppState.projects.filter(p => p.id !== AppState.activeProjectId);
-      AppState.activeProjectId = AppState.projects[0].id;
-      saveWorkspace();
-
-      if (supabase) {
-        try {
-          await supabase.from('projects').delete().eq('id', proj.id);
-        } catch(e) {}
+      if (confirm(`Are you sure you want to delete "${proj.name}"?`)) {
+        AppState.tasks = AppState.tasks.filter(t => t.projectId !== AppState.activeProjectId);
+        AppState.projects = AppState.projects.filter(p => p.id !== AppState.activeProjectId);
+        AppState.activeProjectId = AppState.projects[0].id;
+        saveWorkspace();
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('projects').delete().eq('id', proj.id);
+          } catch(e) {}
+        }
+        syncProjectHeader();
+        renderProjectsSidebar();
+        renderTasksFeed();
+        renderDashboardMetrics();
       }
-
-      syncProjectHeader();
-      renderProjectsSidebar();
-      renderTasksFeed();
-      renderDashboardMetrics();
-      showToast('Project deleted.', 'info');
     }
 
     function clearAllData() {
-      localStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
-      sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
-      location.reload();
+      if (confirm('Clear browser cache and reload? This will resync from Supabase.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(AUTH_SESSION_KEY);
+        sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
+        location.reload();
+      }
     }
 
     function escapeHtml(str) {
