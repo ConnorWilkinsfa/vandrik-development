@@ -54,7 +54,7 @@
         <p class="text-xs text-zinc-500">Sign in to your development workspace</p>
       </div>
 
-      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+      <form id="login-form" onsubmit="event.preventDefault(); handleLogin(event);" class="space-y-4">
         <div class="space-y-1.5">
           <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Username</label>
           <input 
@@ -591,9 +591,7 @@
 
   <!-- ======================== APPLICATION LOGIC ======================== -->
   <script>
-    // -------------------------------------------------------------
-    // SUPABASE CREDENTIALS (REPLACE WITH YOUR OWN FROM SUPABASE SETTINGS > API)
-    // -------------------------------------------------------------
+    // Live Supabase Configuration
     const SUPABASE_URL = "https://xlbhnzbpljpkxlkxehqq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYmhuemJwbGpwa3hsa3hlaHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDI4MzYsImV4cCI6MjEwODI3ODgzNn0.k__ntBUjHHR8VVpSFP41u0G9HRlPJeohzhT452vw5sw";
 
@@ -601,12 +599,13 @@
     if (window.supabase) {
       supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
+
     const STORAGE_KEY = 'vandrik_full_workspace_v4';
     const AUTH_SESSION_KEY = 'vandrik_active_user_session';
     const PASSWORDS_REVEALED_KEY = 'vandrik_passwords_revealed_session';
     const MASTER_PIN = "0107";
 
-    // Pre-seeded with all 11 user logins from your workspace list
+    // Pre-seeded users list
     const INITIAL_WORKSPACE = {
       activeProjectId: 'proj-1',
       groupingMode: 'none',
@@ -674,7 +673,7 @@
     }
 
     // -------------------------------------------------------------
-    // IN-APP CONFIRMATION MODAL
+    // CONFIRMATION MODAL
     // -------------------------------------------------------------
     let pendingConfirmAction = null;
     function confirmAction(title, desc, onConfirm) {
@@ -693,7 +692,7 @@
     }
 
     // -------------------------------------------------------------
-    // CLOUD & LOCAL STORAGE SYNC
+    // DATA LAYER & DATABASE SYNC
     // -------------------------------------------------------------
     async function loadWorkspaceFromCloudOrLocal() {
       if (supabase) {
@@ -734,7 +733,7 @@
           localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
           return;
         } catch (err) {
-          console.warn("Supabase fetch error, fallback to local:", err);
+          console.warn("Supabase fetch failed, falling back to local storage:", err);
         }
       }
 
@@ -753,7 +752,7 @@
     }
 
     // -------------------------------------------------------------
-    // APPLICATION LIFECYCLE & REALTIME SUBSCRIPTION
+    // INITIALIZATION & REALTIME EVENTS
     // -------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', async () => {
       await loadWorkspaceFromCloudOrLocal();
@@ -770,7 +769,6 @@
       renderAdminUsers();
       updatePasswordVisibilityUI();
 
-      // Listen for task changes made by other users in real time
       if (supabase) {
         supabase
           .channel('schema-db-changes')
@@ -788,7 +786,7 @@
     });
 
     // -------------------------------------------------------------
-    // AUTHENTICATION
+    // AUTHENTICATION LOGIC
     // -------------------------------------------------------------
     function getActiveSession() {
       return sessionStorage.getItem(AUTH_SESSION_KEY);
@@ -821,7 +819,8 @@
     }
 
     async function handleLogin(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
+      
       const u = document.getElementById('login-username').value.trim();
       const p = document.getElementById('login-password').value.trim();
       const errBox = document.getElementById('login-error');
@@ -843,12 +842,13 @@
 
       if (matched) {
         sessionStorage.setItem(AUTH_SESSION_KEY, matched.username);
-        errBox.classList.add('hidden');
+        if (errBox) errBox.classList.add('hidden');
         checkAuth();
         showToast(`Welcome back, ${matched.username}!`, 'success');
       } else {
-        errBox.classList.remove('hidden');
+        if (errBox) errBox.classList.remove('hidden');
       }
+      return false;
     }
 
     function handleLogout() {
@@ -858,7 +858,7 @@
     }
 
     // -------------------------------------------------------------
-    // PASSWORD VISIBILITY & PASSCODE (0107)
+    // PASSCODE GATE (0107)
     // -------------------------------------------------------------
     function arePasswordsRevealed() {
       return sessionStorage.getItem(PASSWORDS_REVEALED_KEY) === 'true';
@@ -893,7 +893,7 @@
       sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
       updatePasswordVisibilityUI();
       renderAdminUsers();
-      showToast('Passwords masked.', 'info');
+      showToast('Passwords hidden.', 'info');
     }
 
     function updatePasswordVisibilityUI() {
@@ -1139,7 +1139,7 @@
     }
 
     // -------------------------------------------------------------
-    // TASKS & GROUPING
+    // TASKS & REAL-TIME PERSISTENCE
     // -------------------------------------------------------------
     function toggleGroupingMenu() {
       document.getElementById('menu-grouping').classList.toggle('hidden');
