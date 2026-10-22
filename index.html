@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vandrik Development - Project & Task Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS Client v2 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -36,64 +34,14 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #26282d; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #373a42; }
+    .lucide-icon { display: inline-block; vertical-align: middle; }
   </style>
 </head>
 <body class="bg-[#0e0f12] text-zinc-200 font-sans antialiased flex h-screen overflow-hidden select-none">
 
-  <!-- ======================== LOGIN / AUTH OVERLAY ======================== -->
-  <div id="auth-overlay" class="fixed inset-0 bg-[#0c0d0e] z-[100] flex items-center justify-center p-4">
-    <div class="bg-[#141519] border border-[#24262f] w-full max-w-sm rounded-2xl p-7 shadow-2xl space-y-6">
-      <div class="text-center space-y-2">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-amber-400 flex items-center justify-center shadow-lg mx-auto">
-          <span class="text-sm font-black text-white tracking-tighter">V</span>
-        </div>
-        <h1 class="text-lg font-bold text-white tracking-tight">Vandrik Development</h1>
-        <p class="text-xs text-zinc-500">Sign in to your development workspace</p>
-      </div>
-
-      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-        <div class="space-y-1.5">
-          <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Username</label>
-          <input 
-            type="text" 
-            id="login-username" 
-            required 
-            placeholder="Username"
-            autocomplete="username"
-            class="w-full bg-[#101114] border border-[#24262f] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"
-          />
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Password</label>
-          <input 
-            type="password" 
-            id="login-password" 
-            required 
-            placeholder="••••••••"
-            autocomplete="current-password"
-            class="w-full bg-[#101114] border border-[#24262f] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"
-          />
-        </div>
-
-        <div id="login-error" class="hidden text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg text-center font-medium">
-          Invalid username or password.
-        </div>
-
-        <button 
-          type="submit" 
-          id="btn-login-submit"
-          class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition shadow-sm mt-2"
-        >
-          Sign In
-        </button>
-      </form>
-    </div>
-  </div>
-
   <!-- ======================== LEFT SIDEBAR ======================== -->
   <aside class="w-64 bg-[#121316] border-r border-[#1e2025] flex flex-col justify-between shrink-0 h-full">
-    <div class="p-4 space-y-4">
+    <div class="p-4 space-y-4 overflow-y-auto">
       <!-- Workspace Brand -->
       <div class="flex items-center justify-between px-2 py-1">
         <div class="flex items-center gap-2.5">
@@ -102,7 +50,7 @@
           </div>
           <span class="text-base font-bold text-white tracking-tight">Vandrik Dev</span>
         </div>
-        <span id="role-indicator-badge" class="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider bg-[#1a1c22] px-2 py-0.5 rounded border border-[#26282f]">Dev</span>
+        <span class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider bg-[#1a1c22] px-2 py-0.5 rounded border border-[#26282f]">v3.0</span>
       </div>
 
       <!-- Quick Search Bar -->
@@ -110,7 +58,7 @@
         <div class="flex items-center justify-between bg-[#18191e] border border-[#24262d] rounded-lg px-3 py-1.5 text-xs text-zinc-400">
           <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" id="global-search-input" oninput="handleSearch(this.value)" placeholder="Search tasks..." class="bg-transparent focus:outline-none text-zinc-200 w-28 placeholder-zinc-500 text-xs"/>
+            <input type="text" id="global-search-input" oninput="handleSearch(this.value)" placeholder="Search tasks..." class="bg-transparent focus:outline-none text-zinc-200 w-24 placeholder-zinc-500 text-xs"/>
           </div>
           <span class="text-[10px] bg-[#22242b] text-zinc-400 px-1.5 py-0.5 rounded border border-[#2b2e36]">⌘ + k</span>
         </div>
@@ -123,6 +71,11 @@
           <span>Dashboard</span>
         </button>
 
+        <button onclick="switchTab('inbox')" id="nav-inbox" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <span>Inbox</span>
+        </button>
+
         <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-white bg-[#1a1c22] border-l-2 border-white transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
           <span>Tasks</span>
@@ -133,8 +86,8 @@
           <span>Settings</span>
         </button>
 
-        <!-- Admin Only Tab Button (Visible when logged in as atlantis8998 or Admin role) -->
-        <button onclick="switchTab('admin')" id="nav-admin" class="hidden w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-amber-400 hover:text-amber-300 hover:bg-[#18191e] transition">
+        <!-- Admin Navigation Link (Only shows if atlantis8998) -->
+        <button onclick="switchTab('admin')" id="nav-admin" class="hidden w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-[#1e1c15] transition border border-amber-500/20">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
           <span>Admin Panel</span>
         </button>
@@ -143,28 +96,30 @@
       <!-- Projects Section -->
       <div class="pt-6 border-t border-[#1e2025]">
         <div class="flex items-center justify-between text-xs font-semibold text-zinc-400 mb-2 px-2">
-          <div class="flex items-center gap-1.5 hover:text-white cursor-pointer" onclick="openCreateProjectModal()">
+          <div class="flex items-center gap-1.5 hover:text-white cursor-pointer" onclick="openNewProjectPrompt()">
             <span>✦</span>
             <span>Add Project</span>
           </div>
           <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         </div>
 
-        <div id="project-list" class="space-y-1">
-          <!-- Dynamic Project List -->
-        </div>
+        <div id="project-list" class="space-y-1"></div>
       </div>
     </div>
 
-    <!-- Active User & Sign Out Footer Button -->
-    <div class="p-3 border-t border-[#1e2025] space-y-2">
-      <div class="flex items-center justify-between px-2 text-xs">
-        <span class="text-zinc-500">Logged in as:</span>
-        <span class="text-zinc-200 font-bold font-mono" id="active-user-display">---</span>
+    <!-- User Profile Bar -->
+    <div class="p-3 border-t border-[#1e2025] flex items-center justify-between bg-[#0f1013]">
+      <div class="flex items-center gap-2.5 overflow-hidden">
+        <div class="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center font-bold text-xs text-white shrink-0" id="user-avatar-initial">
+          A
+        </div>
+        <div class="truncate">
+          <div class="text-xs font-semibold text-white truncate" id="sidebar-user-name">atlantis8998</div>
+          <div class="text-[10px] text-zinc-500 truncate" id="sidebar-user-role">Administrator</div>
+        </div>
       </div>
-      <button onclick="handleLogout()" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-500 hover:text-rose-400 hover:bg-[#1a1c22] transition">
-        <span>Sign Out</span>
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      <button onclick="openLoginModal()" title="Switch Account / Sign In" class="text-zinc-400 hover:text-white text-xs px-2 py-1 bg-[#1c1d22] border border-[#282a33] rounded">
+        Switch
       </button>
     </div>
   </aside>
@@ -181,7 +136,6 @@
           <span class="text-zinc-400 font-medium" id="current-project-label">Development</span>
           <span class="text-zinc-600">›</span>
           <span class="bg-[#1c1d22] text-zinc-200 px-2 py-0.5 rounded font-medium border border-[#272932]">Tasks</span>
-          <span class="ml-2 text-[10px] text-zinc-500 bg-[#16171d] px-2 py-0.5 rounded border border-[#242631]" id="sprint-cycle-badge">2-Week Cycles</span>
         </div>
 
         <div class="flex items-center gap-2">
@@ -215,9 +169,9 @@
             </div>
           </div>
 
-          <!-- Add Sprints / Check-In Button -->
-          <button onclick="promptCreateSprint()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition">
-            <span>+ Sprint Check-in</span>
+          <!-- Add Sprints Button for Active Project -->
+          <button onclick="promptCreateSprint()" title="Add Sprint milestone to this project" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition">
+            <span>+ Sprint</span>
           </button>
 
           <!-- Add Task Primary Button -->
@@ -227,17 +181,31 @@
         </div>
       </header>
 
-      <!-- Main Task Feed Area -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-6" id="tasks-container">
-        <!-- Dynamically rendered -->
+      <!-- Task Sub-Filter Bar (All / Me / Current / Backlog) -->
+      <div class="px-6 py-2 border-b border-[#1a1b20] flex items-center justify-between text-xs bg-[#0f1013]">
+        <div class="flex items-center gap-2">
+          <span class="text-zinc-500 font-medium">Filters:</span>
+          <button onclick="openCreateTaskModal()" class="w-5 h-5 rounded-md border border-[#24262e] bg-[#16171c] text-zinc-400 flex items-center justify-center hover:text-white text-xs">+</button>
+        </div>
+
+        <div class="flex items-center gap-1 bg-[#141519] p-0.5 rounded-lg border border-[#21232b]">
+          <button onclick="setFilter('all')" id="filter-all" class="px-2.5 py-0.5 rounded text-xs font-medium bg-[#22242c] text-white">All</button>
+          <button onclick="setFilter('me')" id="filter-me" class="px-2.5 py-0.5 rounded text-xs font-medium text-zinc-400 hover:text-white">Me</button>
+          <button onclick="setFilter('current')" id="filter-current" class="px-2.5 py-0.5 rounded text-xs font-medium text-zinc-400 hover:text-white">Current</button>
+          <button onclick="setFilter('backlog')" id="filter-backlog" class="px-2.5 py-0.5 rounded text-xs font-medium text-zinc-400 hover:text-white">Backlog</button>
+          <button onclick="setFilter('all')" class="px-1.5 text-zinc-500 hover:text-zinc-300 text-xs">✕</button>
+        </div>
       </div>
+
+      <!-- Main Task Feed Area -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6" id="tasks-container"></div>
     </section>
 
     <!-- ================== VIEW: DASHBOARD VIEW ================== -->
     <section id="view-dashboard" class="hidden flex-1 flex flex-col h-full overflow-y-auto p-8 space-y-8">
       <div>
-        <h1 class="text-2xl font-bold text-white tracking-tight">Project Overview</h1>
-        <p class="text-xs text-zinc-500 mt-1">Live metrics across sprint check-in cycles and ongoing deliverables.</p>
+        <h1 class="text-2xl font-bold text-white tracking-tight" id="dash-greeting">Hello, User!</h1>
+        <p class="text-xs text-zinc-500 mt-1">Here is a live summary of your project sprints and progress.</p>
       </div>
 
       <!-- Metric Cards Grid -->
@@ -266,9 +234,29 @@
           <div id="dash-recent-tasks" class="text-xs text-zinc-500">You have no tasks yet!</div>
         </div>
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Sprint Check-in Milestones</h3>
-          <div id="dash-sprints-list" class="text-xs text-zinc-500">No active sprint cycles.</div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Project Sprints</h3>
+          <div id="dash-sprints-list" class="text-xs text-zinc-500">No active sprints.</div>
         </div>
+      </div>
+    </section>
+
+    <!-- ================== VIEW: INBOX VIEW ================== -->
+    <section id="view-inbox" class="hidden flex-1 flex h-full overflow-hidden">
+      <div class="w-80 border-r border-[#1e2025] bg-[#111216] p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-[#1e2025]">
+            <h2 class="text-sm font-bold text-white">Inbox</h2>
+            <button class="text-zinc-500 hover:text-zinc-300">⋮</button>
+          </div>
+          <div class="text-xs text-zinc-500 mt-6 text-center">No unread notifications</div>
+        </div>
+      </div>
+      <div class="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
+        <div class="w-16 h-16 rounded-2xl bg-[#16171c] border border-[#262831] flex items-center justify-center text-zinc-500">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <div class="text-sm font-medium text-zinc-300">Select a notification</div>
+        <p class="text-xs text-zinc-500 max-w-xs">New assignments, mentions, and updates appear here.</p>
       </div>
     </section>
 
@@ -277,9 +265,10 @@
       <div class="max-w-3xl space-y-6">
         <div>
           <h2 class="text-xl font-bold text-white tracking-tight">Project Settings</h2>
-          <p class="text-xs text-zinc-500 mt-1">Configure project cadence, sprint intervals, and properties.</p>
+          <p class="text-xs text-zinc-500 mt-1">Configure project metadata and color themes.</p>
         </div>
 
+        <!-- General Card -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-5">
           <div class="flex items-center gap-2 text-xs font-bold text-zinc-300">
             <span class="w-4 h-4 rounded-full border border-zinc-500 flex items-center justify-center text-[10px]">i</span>
@@ -292,24 +281,15 @@
           </div>
 
           <div class="space-y-2">
-            <label class="text-xs font-semibold text-zinc-400">Sprint Check-in Cadence</label>
-            <select id="setting-project-duration" onchange="updateProjectDuration(this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
-              <option value="1 Week">1 Week</option>
-              <option value="2 Weeks">2 Weeks</option>
-              <option value="3 Weeks">3 Weeks</option>
-              <option value="4 Weeks">4 Weeks</option>
-            </select>
-          </div>
-
-          <div class="space-y-2">
             <label class="text-xs font-semibold text-zinc-400">Description</label>
             <textarea rows="3" id="setting-project-desc" onchange="updateProjectDesc(this.value)" placeholder="Describe your project..." class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
           </div>
 
+          <!-- Color Customizer -->
           <div class="flex items-center justify-between pt-2">
             <div>
               <div class="text-xs font-semibold text-white">Customize theme color</div>
-              <div class="text-[11px] text-zinc-500">Choose an accent color for this project.</div>
+              <div class="text-[11px] text-zinc-500">Choose a color that represents your project.</div>
             </div>
             <div class="flex items-center gap-2">
               <input type="color" id="setting-project-color" onchange="updateProjectColor(this.value)" class="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"/>
@@ -318,72 +298,102 @@
           </div>
         </div>
 
+        <!-- Project Users Assigned (No email invites) -->
+        <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-white uppercase tracking-wider">Project Members</div>
+              <p class="text-[11px] text-zinc-500">Add an existing user account to this project.</p>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <select id="assign-user-select" class="flex-1 bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none"></select>
+            <button onclick="assignUserToCurrentProject()" class="px-4 py-2 bg-[#22242c] hover:bg-[#2c303b] text-white rounded-lg text-xs font-bold transition">
+              Add to Project
+            </button>
+          </div>
+
+          <div class="border-t border-[#1e2025] pt-4 space-y-2" id="project-members-list"></div>
+        </div>
+
+        <!-- Danger Zone -->
         <div class="bg-[#141519] border border-[#2a171a] rounded-xl p-6 space-y-3">
           <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Danger Zone</div>
-          <p class="text-xs text-zinc-500">Permanently delete this project or purge local cache.</p>
+          <p class="text-xs text-zinc-500">Permanently delete this project or reset the full workspace storage.</p>
           <div class="flex gap-3">
             <button onclick="deleteCurrentProject()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition">
               Delete Project
             </button>
             <button onclick="clearAllData()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition">
-              Reset Local Storage
+              Reset All Saved Data
             </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ================== VIEW: ADMIN PANEL (MASTER ACCESS ONLY) ================== -->
+    <!-- ================== VIEW: ADMIN PANEL (atlantis8998) ================== -->
     <section id="view-admin" class="hidden flex-1 overflow-y-auto p-10 space-y-8">
       <div class="max-w-4xl space-y-6">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">Master Admin</span>
-            <h2 class="text-xl font-bold text-white tracking-tight">User Logins & Access Control</h2>
+        <div class="flex items-center justify-between border-b border-[#22242c] pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider">Master Access</span>
+              <h2 class="text-xl font-bold text-white tracking-tight">Admin & User Account Management</h2>
+            </div>
+            <p class="text-xs text-zinc-500 mt-1">Create user accounts, set credentials, and manage roles.</p>
           </div>
-          <p class="text-xs text-zinc-500 mt-1">Add, manage, and delete live user logins on Supabase.</p>
+          <span class="text-xs font-mono text-zinc-400 bg-[#16171d] px-3 py-1.5 rounded-lg border border-[#22242c]">Logged in: atlantis8998</span>
         </div>
 
-        <!-- Add User Card -->
+        <!-- Create New User Form -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
-          <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span>+ Create New User Login</span>
-          </div>
-
-          <form onsubmit="handleCreateUser(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Create New User Account</h3>
+          <form onsubmit="handleCreateUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Username</label>
-              <input type="text" id="new-user-username" required placeholder="e.g. dev_sarah" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"/>
+              <label class="text-[11px] font-medium text-zinc-400 block mb-1">Username</label>
+              <input type="text" id="admin-new-username" required placeholder="e.g. dev_sarah" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"/>
             </div>
             <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Password</label>
-              <input type="password" id="new-user-password" required placeholder="••••••••" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"/>
+              <label class="text-[11px] font-medium text-zinc-400 block mb-1">Password</label>
+              <input type="text" id="admin-new-password" required placeholder="Enter password" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"/>
             </div>
             <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Role</label>
-              <select id="new-user-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+              <label class="text-[11px] font-medium text-zinc-400 block mb-1">Role</label>
+              <select id="admin-new-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none">
                 <option value="Developer">Developer</option>
-                <option value="Admin">Admin</option>
                 <option value="Viewer">Viewer</option>
+                <option value="Administrator">Administrator</option>
               </select>
             </div>
             <div class="flex items-end">
-              <button type="submit" id="btn-create-user-submit" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg transition shadow-sm">
-                Add User
+              <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition">
+                + Create User
               </button>
             </div>
           </form>
         </div>
 
-        <!-- User Accounts Table -->
+        <!-- Existing Users Table -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl overflow-hidden">
-          <div class="p-4 border-b border-[#1e2025] flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">All Registered Users</span>
-            <span class="text-xs text-zinc-500" id="user-count-display">0 Users</span>
+          <div class="px-6 py-4 border-b border-[#22242c] flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Workspace Accounts</h3>
+            <span class="text-xs text-zinc-500" id="admin-user-count">Total: 1</span>
           </div>
 
-          <div class="divide-y divide-[#1c1d24]" id="admin-user-list">
-            <!-- Dynamically populated from Supabase -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#101114] text-zinc-400 border-b border-[#22242c]">
+                <tr>
+                  <th class="px-6 py-3 font-semibold">User</th>
+                  <th class="px-6 py-3 font-semibold">Password</th>
+                  <th class="px-6 py-3 font-semibold">Role</th>
+                  <th class="px-6 py-3 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-user-table-body" class="divide-y divide-[#1e2028]"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -391,43 +401,26 @@
 
   </main>
 
-  <!-- ======================== MODAL: CREATE PROJECT ======================== -->
-  <div id="modal-create-project" class="hidden fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-[#141518] border border-[#262832] w-full max-w-md rounded-2xl p-7 shadow-2xl space-y-5 relative">
-      <button onclick="closeCreateProjectModal()" class="absolute top-5 right-5 text-zinc-500 hover:text-zinc-200 text-sm">✕</button>
-      <h2 class="text-xl font-bold text-white tracking-tight">Create Project</h2>
+  <!-- ======================== MODAL: USER LOGIN / SWITCH ======================== -->
+  <div id="modal-login" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-[#15161a] border border-[#262832] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Switch or Log In</h3>
+        <button onclick="closeLoginModal()" class="text-zinc-500 hover:text-white text-xs">✕</button>
+      </div>
 
-      <form onsubmit="handleCreateProjectSubmit(event)" class="space-y-4">
-        <div class="space-y-1">
-          <input 
-            type="text" 
-            id="new-project-name" 
-            required 
-            placeholder="Name" 
-            class="w-full bg-[#101114] border border-[#2b2d37] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-400"
-          />
+      <form onsubmit="handleAccountLogin(event)" class="space-y-3">
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">Username</label>
+          <input type="text" id="login-username" required placeholder="atlantis8998" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"/>
         </div>
-
-        <div class="bg-[#17181d] border border-[#242630] rounded-xl p-4 flex items-center justify-between">
-          <div class="space-y-0.5">
-            <div class="text-xs font-bold text-white">Sprint Duration</div>
-            <div class="text-[11px] text-zinc-500">How long each work period will last.</div>
-          </div>
-          <div class="relative">
-            <select id="new-project-duration" class="bg-[#121316] border border-[#2b2e38] text-zinc-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer">
-              <option value="1 Week">1 Week</option>
-              <option value="2 Weeks" selected>2 Weeks</option>
-              <option value="3 Weeks">3 Weeks</option>
-              <option value="4 Weeks">4 Weeks</option>
-            </select>
-          </div>
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"/>
         </div>
-
-        <button 
-          type="submit" 
-          class="w-full py-3 bg-[#44464f] hover:bg-[#52545f] text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition shadow-sm"
-        >
-          Create Project
+        <div id="login-error-msg" class="text-[11px] text-rose-400 hidden">Invalid credentials.</div>
+        <button type="submit" class="w-full py-2 bg-white text-black hover:bg-zinc-200 rounded-lg text-xs font-bold transition">
+          Log In
         </button>
       </form>
     </div>
@@ -437,155 +430,155 @@
   <div id="modal-create-task" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-[#15161a] border border-[#262832] w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5 relative">
       
+      <!-- Modal Top Bar -->
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold text-zinc-300 bg-[#202127] border border-[#2c2e38] px-2.5 py-0.5 rounded-md" id="modal-project-badge">Development</span>
         <button onclick="closeCreateTaskModal()" class="text-zinc-500 hover:text-zinc-200 text-sm">✕</button>
       </div>
 
+      <!-- Task Title & Description Input -->
       <div class="space-y-2">
         <input type="text" id="new-task-title" placeholder="New Task" class="w-full bg-transparent text-lg font-semibold text-white placeholder-zinc-500 focus:outline-none"/>
         <textarea rows="3" id="new-task-desc" placeholder="Add a description or type '/' for commands..." class="w-full bg-transparent text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none resize-none"></textarea>
       </div>
 
-      <!-- Interactive Attribute Dropdowns -->
+      <!-- 6 Interactive Attribute Dropdowns -->
       <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-[#1f2129]">
         
-        <!-- Status -->
+        <!-- 1. Status Dropdown -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('status')" id="btn-modal-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button onclick="toggleModalMenu('status')" id="btn-modal-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">◌</span>
             <span id="label-modal-status">Backlog</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-status" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('status', 'Backlog')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded"><span>◌</span> Backlog</button>
-            <button type="button" onclick="selectModalAttribute('status', 'To Do')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-lime-400 hover:bg-[#20222a] rounded"><span>◉</span> To Do</button>
-            <button type="button" onclick="selectModalAttribute('status', 'In Progress')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded"><span>◑</span> In Progress</button>
-            <button type="button" onclick="selectModalAttribute('status', 'In Review')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded"><span>👁</span> In Review</button>
-            <button type="button" onclick="selectModalAttribute('status', 'Done')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-emerald-400 hover:bg-[#20222a] rounded"><span>✓</span> Done</button>
+            <button onclick="selectModalAttribute('status', 'Backlog')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded"><span>◌</span> Backlog</button>
+            <button onclick="selectModalAttribute('status', 'To Do')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-lime-400 hover:bg-[#20222a] rounded"><span>◉</span> To Do</button>
+            <button onclick="selectModalAttribute('status', 'In Progress')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded"><span>◑</span> In Progress</button>
+            <button onclick="selectModalAttribute('status', 'In Review')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded"><span>👁</span> In Review</button>
+            <button onclick="selectModalAttribute('status', 'Done')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-emerald-400 hover:bg-[#20222a] rounded"><span>✓</span> Done</button>
           </div>
         </div>
 
-        <!-- Story Points -->
+        <!-- 2. Estimate (Story Points) Dropdown -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('points')" id="btn-modal-points" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button onclick="toggleModalMenu('points')" id="btn-modal-points" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">⬡</span>
             <span id="label-modal-points">1 Point</span>
           </button>
           <div id="pop-modal-points" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('points', 'No Estimate')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">⬡ No Estimate</button>
-            <button type="button" onclick="selectModalAttribute('points', '1 Point')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 1 Point</button>
-            <button type="button" onclick="selectModalAttribute('points', '2 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 2 Points</button>
-            <button type="button" onclick="selectModalAttribute('points', '3 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 3 Points</button>
-            <button type="button" onclick="selectModalAttribute('points', '5 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 5 Points</button>
+            <button onclick="selectModalAttribute('points', 'No Estimate')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">⬡ No Estimate</button>
+            <button onclick="selectModalAttribute('points', '1 Point')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 1 Point</button>
+            <button onclick="selectModalAttribute('points', '2 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 2 Points</button>
+            <button onclick="selectModalAttribute('points', '3 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 3 Points</button>
+            <button onclick="selectModalAttribute('points', '5 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 5 Points</button>
           </div>
         </div>
 
-        <!-- Priority -->
+        <!-- 3. Priority Dropdown -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('priority')" id="btn-modal-priority" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button onclick="toggleModalMenu('priority')" id="btn-modal-priority" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">一</span>
             <span id="label-modal-priority">None</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-priority" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('priority', 'None')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">一 None</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Low')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">↓ Low</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Medium')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded">→ Medium</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'High')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded">↑ High</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Critical')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">⚠ Critical</button>
+            <button onclick="selectModalAttribute('priority', 'None')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">一 None</button>
+            <button onclick="selectModalAttribute('priority', 'Low')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">↓ Low</button>
+            <button onclick="selectModalAttribute('priority', 'Medium')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded">→ Medium</button>
+            <button onclick="selectModalAttribute('priority', 'High')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded">↑ High</button>
+            <button onclick="selectModalAttribute('priority', 'Critical')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">⚠ Critical</button>
           </div>
         </div>
 
-        <!-- Issue Type -->
+        <!-- 4. Issue Type Dropdown -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('type')" id="btn-modal-type" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button onclick="toggleModalMenu('type')" id="btn-modal-type" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">⊞</span>
             <span id="label-modal-type">Task</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-type" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('type', 'Task')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded">⊞ Task</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Feature')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-purple-400 hover:bg-[#20222a] rounded">⚑ Feature</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Improvement')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">📈 Improvement</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Research')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-teal-400 hover:bg-[#20222a] rounded">🔍 Research</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Testing')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded">🧪 Testing</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Bug')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">🪲 Bug</button>
+            <button onclick="selectModalAttribute('type', 'Task')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded">⊞ Task</button>
+            <button onclick="selectModalAttribute('type', 'Feature')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-purple-400 hover:bg-[#20222a] rounded">⚑ Feature</button>
+            <button onclick="selectModalAttribute('type', 'Improvement')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">📈 Improvement</button>
+            <button onclick="selectModalAttribute('type', 'Research')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-teal-400 hover:bg-[#20222a] rounded">🔍 Research</button>
+            <button onclick="selectModalAttribute('type', 'Testing')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded">🧪 Testing</button>
+            <button onclick="selectModalAttribute('type', 'Bug')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">🪲 Bug</button>
           </div>
         </div>
 
-        <!-- Assignee -->
+        <!-- 5. Assignee Dropdown -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">👤</span>
             <span id="label-modal-assignee">Unassigned</span>
           </button>
-          <div id="pop-modal-assignee" class="hidden absolute bottom-full mb-1 left-0 w-44 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <!-- Dynamically populated from Supabase users -->
-          </div>
+          <div id="pop-modal-assignee" class="hidden absolute bottom-full mb-1 left-0 w-44 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5"></div>
         </div>
 
-        <!-- Sprint / Cycle -->
+        <!-- 6. Sprint Dropdown -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('sprint')" id="btn-modal-sprint" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button onclick="toggleModalMenu('sprint')" id="btn-modal-sprint" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-cyan-400">◯</span>
             <span id="label-modal-sprint">No Sprint</span>
           </button>
-          <div id="pop-modal-sprint" class="hidden absolute bottom-full mb-1 left-0 w-52 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <!-- Dynamically populated -->
-          </div>
+          <div id="pop-modal-sprint" class="hidden absolute bottom-full mb-1 left-0 w-48 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5"></div>
         </div>
 
       </div>
 
+      <!-- Footer Buttons -->
       <div class="flex justify-end gap-2 pt-3 border-t border-[#1f2129]">
-        <button type="button" onclick="closeCreateTaskModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white transition">Cancel</button>
-        <button type="button" onclick="submitNewTask()" class="px-5 py-2 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition">Create</button>
+        <button onclick="closeCreateTaskModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white transition">Cancel</button>
+        <button onclick="submitNewTask()" class="px-5 py-2 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition">Create</button>
       </div>
     </div>
   </div>
 
-  <!-- ======================== FULL JAVASCRIPT LOGIC (SUPABASE PHASE 2) ======================== -->
+  <!-- ======================== APPLICATION JAVASCRIPT ======================== -->
   <script>
-    // -------------------------------------------------------------
-    // 1. SUPABASE CLIENT CONFIGURATION
-    // -------------------------------------------------------------
-    // REPLACE THESE TWO STRINGS WITH YOUR SUPABASE SETTINGS > API VALUES:
-    const SUPABASE_URL = "https://xlbhnzbpljpkxlkxehqq.supabase.co/rest/v1/";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYmhuemJwbGpwa3hsa3hlaHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDI4MzYsImV4cCI6MjEwODI3ODgzNn0.k__ntBUjHHR8VVpSFP41u0G9HRlPJeohzhT452vw5sw";
-
-    let supabase = null;
-    if (window.supabase && SUPABASE_URL !== "https://xlbhnzbpljpkxlkxehqq.supabase.co/rest/v1/") {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-
     const STORAGE_KEY = 'vandrik_full_workspace_v3';
-    const AUTH_SESSION_KEY = 'vandrik_active_user_session';
 
-    // Default In-Memory Workspace
-    const INITIAL_WORKSPACE = {
-      activeProjectId: 'proj-1',
-      groupingMode: 'none',
+    // Default clean master data
+    const DEFAULT_DATA = {
+      currentUser: {
+        username: 'atlantis8998',
+        role: 'Administrator'
+      },
       users: [
-        { username: 'atlantis8998', password: 'StringsandKeys16', role: 'Admin' },
-        { username: 'test', password: 'test', role: 'Developer' }
+        { username: 'atlantis8998', password: 'StringsandKeys16', role: 'Administrator' }
       ],
+      activeProjectId: 'proj-default',
+      groupingMode: 'none',
+      activeFilter: 'all',
       projects: [
         {
-          id: 'proj-1',
+          id: 'proj-default',
           name: 'Development',
-          sprintDuration: '2 Weeks',
-          description: 'Core platform engineering workspace.',
+          description: '',
           color: '#ffbe0b',
-          sprints: [
-            { id: 'sp-1', name: 'Cycle 1 (Initial Setup)', duration: '2 Weeks' }
-          ]
+          sprints: [],
+          members: ['atlantis8998']
         }
       ],
       tasks: []
     };
 
-    let AppState = JSON.parse(JSON.stringify(INITIAL_WORKSPACE));
+    function loadState() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          console.error('Failed to parse localStorage', e);
+        }
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+
+    const AppState = loadState();
 
     let draftTask = {
       status: 'Backlog',
@@ -596,341 +589,48 @@
       sprint: 'No Sprint'
     };
 
-    // -------------------------------------------------------------
-    // 2. SUPABASE CLOUD SYNC & LOCAL STORAGE ENGINE
-    // -------------------------------------------------------------
-    async function loadWorkspaceFromCloudOrLocal() {
-      // If Supabase is active, pull live tables
-      if (supabase) {
-        try {
-          const [uRes, pRes, tRes] = await Promise.all([
-            supabase.from('users').select('*'),
-            supabase.from('projects').select('*'),
-            supabase.from('tasks').select('*')
-          ]);
-
-          if (!uRes.error && uRes.data && uRes.data.length > 0) {
-            AppState.users = uRes.data.map(u => ({ username: u.username, password: u.password, role: u.role, createdAt: u.created_at }));
-          }
-          if (!pRes.error && pRes.data && pRes.data.length > 0) {
-            AppState.projects = pRes.data.map(p => ({
-              id: p.id,
-              name: p.name,
-              sprintDuration: p.sprint_duration,
-              description: p.description,
-              color: p.color,
-              sprints: p.sprints || []
-            }));
-          }
-          if (!tRes.error && tRes.data) {
-            AppState.tasks = tRes.data.map(t => ({
-              id: t.id,
-              projectId: t.project_id,
-              title: t.title,
-              description: t.description,
-              status: t.status,
-              points: t.points,
-              priority: t.priority,
-              type: t.type,
-              assignee: t.assignee,
-              sprint: t.sprint
-            }));
-          }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
-          return;
-        } catch (err) {
-          console.warn("Supabase fetch error, fallback to local:", err);
-        }
-      }
-
-      // Fallback: LocalStorage
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          AppState = JSON.parse(stored);
-        } catch (e) {
-          console.error("Local storage parse error:", e);
-        }
-      }
-    }
-
-    function saveWorkspace() {
+    function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
     }
 
-    async function syncProjectToCloud(proj) {
-      if (!supabase) return;
-      try {
-        await supabase.from('projects').upsert({
-          id: proj.id,
-          name: proj.name,
-          sprint_duration: proj.sprintDuration,
-          description: proj.description,
-          color: proj.color,
-          sprints: proj.sprints
-        });
-      } catch (e) {
-        console.error("Project sync failed:", e);
+    window.addEventListener('DOMContentLoaded', () => {
+      // Ensure master admin exists
+      if (!AppState.users.some(u => u.username === 'atlantis8998')) {
+        AppState.users.push({ username: 'atlantis8998', password: 'StringsandKeys16', role: 'Administrator' });
       }
-    }
-
-    async function syncTaskToCloud(task) {
-      if (!supabase) return;
-      try {
-        await supabase.from('tasks').upsert({
-          id: task.id,
-          project_id: task.projectId,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          points: task.points,
-          priority: task.priority,
-          type: task.type,
-          assignee: task.assignee,
-          sprint: task.sprint
-        });
-      } catch (e) {
-        console.error("Task sync failed:", e);
-      }
-    }
-
-    async function deleteTaskFromCloud(taskId) {
-      if (!supabase) return;
-      try {
-        await supabase.from('tasks').delete().eq('id', taskId);
-      } catch (e) {
-        console.error("Task delete failed:", e);
-      }
-    }
-
-    async function syncUserToCloud(user) {
-      if (!supabase) return;
-      try {
-        await supabase.from('users').upsert({
-          username: user.username,
-          password: user.password,
-          role: user.role
-        });
-      } catch (e) {
-        console.error("User sync failed:", e);
-      }
-    }
-
-    async function deleteUserFromCloud(username) {
-      if (!supabase) return;
-      try {
-        await supabase.from('users').delete().eq('username', username);
-      } catch (e) {
-        console.error("User delete failed:", e);
-      }
-    }
-
-    // -------------------------------------------------------------
-    // 3. APPLICATION LIFECYCLE
-    // -------------------------------------------------------------
-    window.addEventListener('DOMContentLoaded', async () => {
-      await loadWorkspaceFromCloudOrLocal();
-      checkAuth();
 
       if (!AppState.projects.some(p => p.id === AppState.activeProjectId)) {
-        AppState.activeProjectId = AppState.projects[0]?.id || 'proj-1';
+        AppState.activeProjectId = AppState.projects[0]?.id || 'proj-default';
       }
 
+      updateUserUI();
       renderProjectsSidebar();
       syncProjectHeader();
       renderTasksFeed();
       renderDashboardMetrics();
+      renderProjectMembers();
       renderAdminUsers();
     });
 
-    // -------------------------------------------------------------
-    // 4. AUTHENTICATION
-    // -------------------------------------------------------------
-    function getActiveSession() {
-      return sessionStorage.getItem(AUTH_SESSION_KEY);
-    }
+    function updateUserUI() {
+      const u = AppState.currentUser;
+      document.getElementById('sidebar-user-name').innerText = u.username;
+      document.getElementById('sidebar-user-role').innerText = u.role;
+      document.getElementById('user-avatar-initial').innerText = u.username[0]?.toUpperCase() || 'U';
+      document.getElementById('dash-greeting').innerText = `Hello, ${u.username}!`;
 
-    function checkAuth() {
-      const username = getActiveSession();
-      const overlay = document.getElementById('auth-overlay');
+      // Show Admin Panel tab only if username is atlantis8998
       const adminNav = document.getElementById('nav-admin');
-      const userDisplay = document.getElementById('active-user-display');
-      const roleBadge = document.getElementById('role-indicator-badge');
-
-      if (username) {
-        overlay.classList.add('hidden');
-        userDisplay.innerText = username;
-        
-        const currentUser = AppState.users.find(u => u.username === username);
-        const role = currentUser ? currentUser.role : 'Developer';
-        roleBadge.innerText = role;
-
-        if (username === 'atlantis8998' || role === 'Admin') {
-          adminNav.classList.remove('hidden');
-        } else {
-          adminNav.classList.add('hidden');
-        }
+      if (u.username === 'atlantis8998') {
+        adminNav.classList.remove('hidden');
       } else {
-        overlay.classList.remove('hidden');
         adminNav.classList.add('hidden');
+        if (AppState.activeTab === 'admin') switchTab('tasks');
       }
-    }
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const u = document.getElementById('login-username').value.trim();
-      const p = document.getElementById('login-password').value.trim();
-      const errBox = document.getElementById('login-error');
-
-      // Check against live user accounts
-      let matched = AppState.users.find(user => user.username === u && user.password === p);
-
-      if (!matched && supabase) {
-        try {
-          const { data } = await supabase.from('users').select('*').eq('username', u).eq('password', p).single();
-          if (data) {
-            matched = data;
-            if (!AppState.users.some(x => x.username === data.username)) {
-              AppState.users.push(data);
-              saveWorkspace();
-            }
-          }
-        } catch (err) {}
-      }
-
-      if (matched) {
-        sessionStorage.setItem(AUTH_SESSION_KEY, matched.username);
-        errBox.classList.add('hidden');
-        checkAuth();
-      } else {
-        errBox.classList.remove('hidden');
-      }
-    }
-
-    function handleLogout() {
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
-      location.reload();
-    }
-
-    // -------------------------------------------------------------
-    // 5. ADMIN USER MANAGEMENT
-    // -------------------------------------------------------------
-    async function handleCreateUser(e) {
-      e.preventDefault();
-      const username = document.getElementById('new-user-username').value.trim();
-      const password = document.getElementById('new-user-password').value.trim();
-      const role = document.getElementById('new-user-role').value;
-
-      if (!username || !password) return;
-
-      if (AppState.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-        alert('A user with that username already exists.');
-        return;
-      }
-
-      const newUser = {
-        username: username,
-        password: password,
-        role: role,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-
-      AppState.users.push(newUser);
-      saveWorkspace();
-      await syncUserToCloud(newUser);
-
-      document.getElementById('new-user-username').value = '';
-      document.getElementById('new-user-password').value = '';
-      renderAdminUsers();
-      alert(`User "${username}" created! They can now log in from any browser.`);
-    }
-
-    async function deleteUser(username) {
-      if (username === 'atlantis8998') {
-        alert('Cannot delete the root administrator account.');
-        return;
-      }
-      if (confirm(`Are you sure you want to delete login "${username}"?`)) {
-        AppState.users = AppState.users.filter(u => u.username !== username);
-        saveWorkspace();
-        await deleteUserFromCloud(username);
-        renderAdminUsers();
-      }
-    }
-
-    function renderAdminUsers() {
-      const container = document.getElementById('admin-user-list');
-      const countDisplay = document.getElementById('user-count-display');
-      if (!container) return;
-
-      countDisplay.innerText = `${AppState.users.length} Users`;
-
-      container.innerHTML = AppState.users.map(u => `
-        <div class="p-4 flex items-center justify-between text-xs hover:bg-[#16171d] transition">
-          <div class="flex items-center gap-3">
-            <span class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-zinc-200">
-              ${u.username[0].toUpperCase()}
-            </span>
-            <div>
-              <div class="font-bold text-white flex items-center gap-2">
-                <span>${escapeHtml(u.username)}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded font-normal ${
-                  u.role === 'Admin' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                }">${u.role}</span>
-              </div>
-              <div class="text-[10px] text-zinc-500 font-mono mt-0.5">Password: •••••••• | Added: ${u.createdAt || 'Active'}</div>
-            </div>
-          </div>
-          <div>
-            ${u.username !== 'atlantis8998' ? `
-              <button onclick="deleteUser('${escapeHtml(u.username)}')" class="px-2.5 py-1 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded transition text-xs">
-                Delete
-              </button>
-            ` : '<span class="text-xs text-zinc-600 italic">Root Admin</span>'}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // -------------------------------------------------------------
-    // 6. TABS & VIEW ROUTING
-    // -------------------------------------------------------------
-    function switchTab(tabId) {
-      ['tasks', 'dashboard', 'settings', 'admin'].forEach(id => {
-        const view = document.getElementById(`view-${id}`);
-        if (view) view.classList.add('hidden');
-        const navBtn = document.getElementById(`nav-${id}`);
-        if (navBtn) {
-          navBtn.classList.remove('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
-          navBtn.classList.add('text-zinc-400');
-        }
-      });
-
-      const targetView = document.getElementById(`view-${tabId}`);
-      if (targetView) targetView.classList.remove('hidden');
-
-      const activeNav = document.getElementById(`nav-${tabId}`);
-      if (activeNav) {
-        activeNav.classList.remove('text-zinc-400');
-        activeNav.classList.add('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
-      }
-
-      if (tabId === 'dashboard') renderDashboardMetrics();
-      if (tabId === 'settings') syncProjectHeader();
-      if (tabId === 'admin') renderAdminUsers();
     }
 
     function getCurrentProject() {
       return AppState.projects.find(p => p.id === AppState.activeProjectId) || AppState.projects[0];
-    }
-
-    function selectProject(projId) {
-      AppState.activeProjectId = projId;
-      saveWorkspace();
-      syncProjectHeader();
-      renderProjectsSidebar();
-      renderTasksFeed();
-      renderDashboardMetrics();
     }
 
     function syncProjectHeader() {
@@ -938,22 +638,48 @@
       if (!project) return;
       document.getElementById('current-project-label').innerText = project.name;
       document.getElementById('modal-project-badge').innerText = project.name;
-      document.getElementById('sprint-cycle-badge').innerText = `${project.sprintDuration || '2 Weeks'} Cycles`;
-      
-      const settingName = document.getElementById('setting-project-name');
-      if (settingName) settingName.value = project.name;
+      document.getElementById('setting-project-name').value = project.name;
+      document.getElementById('setting-project-desc').value = project.description || '';
+      document.getElementById('setting-project-color').value = project.color || '#ffbe0b';
+      document.getElementById('setting-color-label').innerText = (project.color || '#ffbe0b').toUpperCase();
+    }
 
-      const settingDuration = document.getElementById('setting-project-duration');
-      if (settingDuration) settingDuration.value = project.sprintDuration || '2 Weeks';
+    function switchTab(tabId) {
+      AppState.activeTab = tabId;
+      ['tasks', 'dashboard', 'inbox', 'settings', 'admin'].forEach(id => {
+        const v = document.getElementById(`view-${id}`);
+        if (v) v.classList.add('hidden');
+        const navBtn = document.getElementById(`nav-${id}`);
+        if (navBtn) {
+          navBtn.classList.remove('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
+          navBtn.classList.add('text-zinc-400');
+        }
+      });
 
-      const settingDesc = document.getElementById('setting-project-desc');
-      if (settingDesc) settingDesc.value = project.description || '';
+      const activeView = document.getElementById(`view-${tabId}`);
+      if (activeView) activeView.classList.remove('hidden');
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-zinc-400');
+        activeNav.classList.add('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
+      }
 
-      const settingColor = document.getElementById('setting-project-color');
-      if (settingColor) settingColor.value = project.color || '#ffbe0b';
+      if (tabId === 'dashboard') renderDashboardMetrics();
+      if (tabId === 'settings') {
+        syncProjectHeader();
+        renderProjectMembers();
+      }
+      if (tabId === 'admin') renderAdminUsers();
+    }
 
-      const colorLabel = document.getElementById('setting-color-label');
-      if (colorLabel) colorLabel.innerText = (project.color || '#ffbe0b').toUpperCase();
+    function selectProject(projId) {
+      AppState.activeProjectId = projId;
+      saveState();
+      syncProjectHeader();
+      renderProjectsSidebar();
+      renderTasksFeed();
+      renderDashboardMetrics();
+      renderProjectMembers();
     }
 
     function renderProjectsSidebar() {
@@ -962,65 +688,31 @@
         const isSelected = proj.id === AppState.activeProjectId;
         return `
           <div onclick="selectProject('${proj.id}')" class="flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${isSelected ? 'bg-[#18191f] text-white' : 'text-zinc-400 hover:bg-[#141519] hover:text-zinc-200'}">
-            <span class="truncate">${escapeHtml(proj.name)}</span>
+            <span class="truncate">${proj.name}</span>
             <span class="w-2 h-2 rounded-full shrink-0 ml-2" style="background-color: ${proj.color};"></span>
           </div>
         `;
       }).join('');
     }
 
-    // -------------------------------------------------------------
-    // 7. PROJECT CREATION
-    // -------------------------------------------------------------
-    function openCreateProjectModal() {
-      document.getElementById('modal-create-project').classList.remove('hidden');
-      document.getElementById('new-project-name').value = '';
-      document.getElementById('new-project-name').focus();
+    function promptCreateSprint() {
+      const proj = getCurrentProject();
+      const name = prompt(`Add a new Sprint for project "${proj.name}" (e.g. Sprint 1 [Oct 21 - Nov 3]):`);
+      if (name && name.trim()) {
+        proj.sprints.push({ id: 'sp-' + Date.now(), name: name.trim() });
+        saveState();
+        renderDashboardMetrics();
+        alert(`Sprint added to ${proj.name}!`);
+      }
     }
 
-    function closeCreateProjectModal() {
-      document.getElementById('modal-create-project').classList.add('hidden');
-    }
-
-    async function handleCreateProjectSubmit(e) {
-      e.preventDefault();
-      const name = document.getElementById('new-project-name').value.trim();
-      const duration = document.getElementById('new-project-duration').value;
-      if (!name) return;
-
-      const newProj = {
-        id: 'proj-' + Date.now(),
-        name: name,
-        sprintDuration: duration,
-        description: '',
-        color: '#3b82f6',
-        sprints: [
-          { id: 'sp-' + Date.now(), name: `Sprint 1 [${duration} Check-in]`, duration: duration }
-        ]
-      };
-
-      AppState.projects.push(newProj);
-      AppState.activeProjectId = newProj.id;
-      saveWorkspace();
-      await syncProjectToCloud(newProj);
-
-      closeCreateProjectModal();
-      syncProjectHeader();
-      renderProjectsSidebar();
-      renderTasksFeed();
-      renderDashboardMetrics();
-    }
-
-    // -------------------------------------------------------------
-    // 8. GROUPING & SEARCH
-    // -------------------------------------------------------------
     function toggleGroupingMenu() {
       document.getElementById('menu-grouping').classList.toggle('hidden');
     }
 
     function setGrouping(mode) {
       AppState.groupingMode = mode;
-      saveWorkspace();
+      saveState();
       document.getElementById('menu-grouping').classList.add('hidden');
       const labels = {
         none: 'Group',
@@ -1034,21 +726,42 @@
       renderTasksFeed();
     }
 
+    function setFilter(filter) {
+      AppState.activeFilter = filter;
+      saveState();
+      ['all', 'me', 'current', 'backlog'].forEach(f => {
+        const btn = document.getElementById(`filter-${f}`);
+        btn.classList.remove('bg-[#22242c]', 'text-white');
+        btn.classList.add('text-zinc-400');
+      });
+      const activeBtn = document.getElementById(`filter-${filter}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-zinc-400');
+        activeBtn.classList.add('bg-[#22242c]', 'text-white');
+      }
+      renderTasksFeed();
+    }
+
     let searchQuery = '';
     function handleSearch(val) {
       searchQuery = val.toLowerCase().trim();
       renderTasksFeed();
     }
 
-    // -------------------------------------------------------------
-    // 9. TASK RENDERING & CRUD
-    // -------------------------------------------------------------
     function renderTasksFeed() {
       const container = document.getElementById('tasks-container');
       let filtered = AppState.tasks.filter(t => t.projectId === AppState.activeProjectId);
 
       if (searchQuery) {
         filtered = filtered.filter(t => t.title.toLowerCase().includes(searchQuery) || (t.description && t.description.toLowerCase().includes(searchQuery)));
+      }
+
+      if (AppState.activeFilter === 'me') {
+        filtered = filtered.filter(t => t.assignee === AppState.currentUser.username);
+      } else if (AppState.activeFilter === 'backlog') {
+        filtered = filtered.filter(t => t.status === 'Backlog');
+      } else if (AppState.activeFilter === 'current') {
+        filtered = filtered.filter(t => t.status === 'In Progress' || t.status === 'In Review');
       }
 
       if (filtered.length === 0) {
@@ -1100,7 +813,7 @@
       const pointsNum = task.points.split(' ')[0];
 
       return `
-        <div class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] rounded-xl px-4 py-2.5 flex items-center justify-between gap-4 transition group">
+        <div class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] rounded-xl px-4 py-2 flex items-center justify-between gap-4 transition group">
           <div class="flex items-center gap-3">
             <button onclick="cycleTaskStatus('${task.id}')" title="Cycle Status" class="text-xs ${statusIcon.color}">${statusIcon.icon}</button>
             <span class="text-[10px] font-mono border border-[#2b2e38] bg-[#1a1b22] px-1.5 py-0.5 rounded text-zinc-400">${pointsNum === 'No' ? '0' : pointsNum}</span>
@@ -1109,9 +822,9 @@
 
           <div class="flex items-center gap-3">
             <span class="text-[11px] px-2 py-0.5 rounded bg-[#181920] border border-[#252732] text-zinc-300">⊞ ${task.type}</span>
-            <span class="text-[11px] text-zinc-400">👤 ${escapeHtml(task.assignee)}</span>
+            <span class="text-[11px] text-zinc-400">👤 <span class="hidden md:inline">${escapeHtml(task.assignee)}</span></span>
             ${task.sprint !== 'No Sprint' ? `<span class="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.5 rounded">◯ ${escapeHtml(task.sprint.split(' ')[0])}</span>` : ''}
-            <button onclick="deleteTask('${task.id}')" title="Delete Task" class="text-zinc-600 hover:text-rose-400 text-xs ml-1">✕</button>
+            <button onclick="deleteTask('${task.id}')" title="Delete Task" class="text-zinc-600 hover:text-rose-400 text-xs">✕</button>
           </div>
         </div>
       `;
@@ -1127,22 +840,20 @@
       }
     }
 
-    async function cycleTaskStatus(taskId) {
+    function cycleTaskStatus(taskId) {
       const task = AppState.tasks.find(t => t.id === taskId);
       if (!task) return;
       const order = ['Backlog', 'To Do', 'In Progress', 'In Review', 'Done'];
       const nextIndex = (order.indexOf(task.status) + 1) % order.length;
       task.status = order[nextIndex];
-      saveWorkspace();
-      await syncTaskToCloud(task);
+      saveState();
       renderTasksFeed();
       renderDashboardMetrics();
     }
 
-    async function deleteTask(taskId) {
+    function deleteTask(taskId) {
       AppState.tasks = AppState.tasks.filter(t => t.id !== taskId);
-      saveWorkspace();
-      await deleteTaskFromCloud(taskId);
+      saveState();
       renderTasksFeed();
       renderDashboardMetrics();
     }
@@ -1178,14 +889,14 @@
         const buckets = [
           { name: 'Unassigned', icon: '👤', targetField: 'assignee', targetValue: 'Unassigned', match: t => t.assignee === 'Unassigned' }
         ];
-        AppState.users.forEach(u => {
+        activeProj.members.forEach(m => {
           buckets.push({
-            name: u.username,
+            name: m,
             icon: '👤',
             colorClass: 'text-amber-400',
             targetField: 'assignee',
-            targetValue: u.username,
-            match: t => t.assignee === u.username
+            targetValue: m,
+            match: t => t.assignee === m
           });
         });
         return buckets;
@@ -1208,11 +919,10 @@
       return [];
     }
 
-    // -------------------------------------------------------------
-    // 10. MODAL: CREATE TASK
-    // -------------------------------------------------------------
+    // Modal Task Creation
     function openCreateTaskModal(field, val) {
-      document.getElementById('modal-create-task').classList.remove('hidden');
+      const modal = document.getElementById('modal-create-task');
+      modal.classList.remove('hidden');
       document.getElementById('new-task-title').focus();
       
       draftTask = {
@@ -1269,32 +979,29 @@
     function renderModalSprintOptions() {
       const proj = getCurrentProject();
       const sprintPop = document.getElementById('pop-modal-sprint');
-      let html = `<button type="button" onclick="selectModalAttribute('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ No Sprint</button>`;
-      
+      let html = `<button onclick="selectModalAttribute('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ No Sprint</button>`;
       proj.sprints.forEach(sp => {
-        html += `<button type="button" onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded">◯ ${escapeHtml(sp.name)}</button>`;
+        html += `<button onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded">◯ ${escapeHtml(sp.name)}</button>`;
       });
-
       sprintPop.innerHTML = html;
     }
 
     function renderModalAssigneeOptions() {
+      const proj = getCurrentProject();
       const pop = document.getElementById('pop-modal-assignee');
-      let html = `<button type="button" onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ Unassigned</button>`;
-      
-      AppState.users.forEach(u => {
+      let html = `<button onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ Unassigned</button>`;
+      proj.members.forEach(m => {
         html += `
-          <button type="button" onclick="selectModalAttribute('assignee', '${escapeHtml(u.username)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">
-            <span class="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-bold">${u.username[0]?.toUpperCase()}</span>
-            <span>${escapeHtml(u.username)}</span>
+          <button onclick="selectModalAttribute('assignee', '${escapeHtml(m)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">
+            <span class="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-bold">${m[0]?.toUpperCase()}</span>
+            <span>${escapeHtml(m)}</span>
           </button>
         `;
       });
-
       pop.innerHTML = html;
     }
 
-    async function submitNewTask() {
+    function submitNewTask() {
       const title = document.getElementById('new-task-title').value.trim();
       if (!title) return;
 
@@ -1307,17 +1014,12 @@
       };
 
       AppState.tasks.unshift(newTask);
-      saveWorkspace();
-      await syncTaskToCloud(newTask);
-
+      saveState();
       closeCreateTaskModal();
       renderTasksFeed();
       renderDashboardMetrics();
     }
 
-    // -------------------------------------------------------------
-    // 11. DASHBOARD & SPRINTS
-    // -------------------------------------------------------------
     function renderDashboardMetrics() {
       const projTasks = AppState.tasks.filter(t => t.projectId === AppState.activeProjectId);
       const backlog = projTasks.filter(t => t.status === 'Backlog').length;
@@ -1344,107 +1046,221 @@
       const sprintBox = document.getElementById('dash-sprints-list');
       const proj = getCurrentProject();
       if (!proj || proj.sprints.length === 0) {
-        sprintBox.innerHTML = '<div class="text-zinc-500">No active sprint cycles. Click "+ Sprint Check-in" to schedule one.</div>';
+        sprintBox.innerHTML = '<div class="text-zinc-500">No active sprints. Click "+ Sprint" above to add one.</div>';
       } else {
         sprintBox.innerHTML = proj.sprints.map(sp => {
           const count = projTasks.filter(t => t.sprint === sp.name).length;
           return `
-            <div class="flex items-center justify-between py-2 border-b border-[#1c1d25] text-xs">
-              <div>
-                <span class="text-cyan-400 font-medium">◯ ${escapeHtml(sp.name)}</span>
-                <span class="text-[10px] text-zinc-500 block">Interval: ${sp.duration || proj.sprintDuration || '2 Weeks'}</span>
-              </div>
-              <span class="text-zinc-400 text-xs font-mono">${count} tasks</span>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#1c1d25] text-xs">
+              <span class="text-cyan-400 font-medium">◯ ${escapeHtml(sp.name)}</span>
+              <span class="text-zinc-400 text-[10px]">${count} tasks</span>
             </div>
           `;
         }).join('');
       }
     }
 
-    async function promptCreateSprint() {
-      const proj = getCurrentProject();
-      const count = proj.sprints.length + 1;
-      const cadence = proj.sprintDuration || '2 Weeks';
-      const name = prompt(`Enter name for Sprint ${count} (Cadence: ${cadence}):`, `Sprint ${count} [${cadence} Check-in]`);
-      if (name && name.trim()) {
-        proj.sprints.push({ 
-          id: 'sp-' + Date.now(), 
-          name: name.trim(), 
-          duration: cadence
-        });
-        saveWorkspace();
-        await syncProjectToCloud(proj);
-        renderDashboardMetrics();
+    // Login & Switch Account Modal
+    function openLoginModal() {
+      document.getElementById('modal-login').classList.remove('hidden');
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error-msg').classList.add('hidden');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('modal-login').classList.add('hidden');
+    }
+
+    function handleAccountLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('login-username').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+
+      const account = AppState.users.find(u => u.username === user && u.password === pass);
+      if (account) {
+        AppState.currentUser = {
+          username: account.username,
+          role: account.role
+        };
+        saveState();
+        updateUserUI();
+        closeLoginModal();
+        renderTasksFeed();
+      } else {
+        document.getElementById('login-error-msg').classList.remove('hidden');
       }
     }
 
-    // -------------------------------------------------------------
-    // 12. PROJECT SETTINGS MANAGEMENT
-    // -------------------------------------------------------------
-    async function updateProjectName(val) {
+    // Admin Panel Account Management
+    function handleCreateUser(e) {
+      e.preventDefault();
+      const user = document.getElementById('admin-new-username').value.trim();
+      const pass = document.getElementById('admin-new-password').value.trim();
+      const role = document.getElementById('admin-new-role').value;
+
+      if (!user || !pass) return;
+
+      if (AppState.users.some(u => u.username === user)) {
+        alert('An account with this username already exists.');
+        return;
+      }
+
+      AppState.users.push({ username: user, password: pass, role: role });
+      saveState();
+
+      document.getElementById('admin-new-username').value = '';
+      document.getElementById('admin-new-password').value = '';
+      renderAdminUsers();
+      renderProjectMembers();
+      alert(`User ${user} created successfully!`);
+    }
+
+    function renderAdminUsers() {
+      const tbody = document.getElementById('admin-user-table-body');
+      document.getElementById('admin-user-count').innerText = `Total: ${AppState.users.length}`;
+
+      tbody.innerHTML = AppState.users.map(u => `
+        <tr class="hover:bg-[#16171d] transition">
+          <td class="px-6 py-3 font-medium text-white flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-amber-600 text-[10px] flex items-center justify-center font-bold text-white">${u.username[0].toUpperCase()}</span>
+            <span>${escapeHtml(u.username)}</span>
+          </td>
+          <td class="px-6 py-3 font-mono text-zinc-400">${escapeHtml(u.password)}</td>
+          <td class="px-6 py-3 text-zinc-300">
+            <span class="px-2 py-0.5 rounded text-[10px] ${u.role === 'Administrator' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-[#1e2025] text-zinc-400'}">${u.role}</span>
+          </td>
+          <td class="px-6 py-3 text-right">
+            ${u.username !== 'atlantis8998' ? `<button onclick="deleteUserAccount('${escapeHtml(u.username)}')" class="text-rose-400 hover:text-rose-300 text-xs">Delete</button>` : '<span class="text-zinc-600">Locked</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function deleteUserAccount(username) {
+      if (confirm(`Are you sure you want to delete user account "${username}"?`)) {
+        AppState.users = AppState.users.filter(u => u.username !== username);
+        // Remove user from all projects
+        AppState.projects.forEach(p => {
+          p.members = p.members.filter(m => m !== username);
+        });
+        saveState();
+        renderAdminUsers();
+        renderProjectMembers();
+      }
+    }
+
+    // Project Settings Member Management
+    function renderProjectMembers() {
+      const proj = getCurrentProject();
+      const select = document.getElementById('assign-user-select');
+      const list = document.getElementById('project-members-list');
+      if (!proj) return;
+
+      // Filter available users not yet in project
+      select.innerHTML = AppState.users.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(u.username)} (${u.role})</option>`).join('');
+
+      list.innerHTML = proj.members.map(m => `
+        <div class="flex items-center justify-between p-2 rounded-lg bg-[#101114] border border-[#22242c]">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">${m[0]?.toUpperCase()}</span>
+            <div class="text-xs font-semibold text-white">${escapeHtml(m)}</div>
+          </div>
+          <button onclick="removeMemberFromProject('${escapeHtml(m)}')" class="text-xs text-zinc-500 hover:text-rose-400">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    function assignUserToCurrentProject() {
+      const select = document.getElementById('assign-user-select');
+      const username = select.value;
+      const proj = getCurrentProject();
+      if (!proj.members.includes(username)) {
+        proj.members.push(username);
+        saveState();
+        renderProjectMembers();
+      } else {
+        alert('User is already assigned to this project.');
+      }
+    }
+
+    function removeMemberFromProject(username) {
+      const proj = getCurrentProject();
+      if (proj.members.length <= 1) {
+        alert('A project must have at least one member.');
+        return;
+      }
+      proj.members = proj.members.filter(m => m !== username);
+      saveState();
+      renderProjectMembers();
+    }
+
+    function updateProjectName(val) {
       if (!val.trim()) return;
       const proj = getCurrentProject();
       proj.name = val.trim();
-      saveWorkspace();
-      await syncProjectToCloud(proj);
+      saveState();
       syncProjectHeader();
       renderProjectsSidebar();
     }
 
-    async function updateProjectDuration(val) {
-      const proj = getCurrentProject();
-      proj.sprintDuration = val;
-      saveWorkspace();
-      await syncProjectToCloud(proj);
-      syncProjectHeader();
-      renderDashboardMetrics();
-    }
-
-    async function updateProjectDesc(val) {
+    function updateProjectDesc(val) {
       const proj = getCurrentProject();
       proj.description = val.trim();
-      saveWorkspace();
-      await syncProjectToCloud(proj);
+      saveState();
     }
 
-    async function updateProjectColor(val) {
+    function updateProjectColor(val) {
       const proj = getCurrentProject();
       proj.color = val;
       document.getElementById('setting-color-label').innerText = val.toUpperCase();
-      saveWorkspace();
-      await syncProjectToCloud(proj);
+      saveState();
       renderProjectsSidebar();
     }
 
-    async function deleteCurrentProject() {
-      if (AppState.projects.length <= 1) {
-        alert('You must have at least one project.');
-        return;
-      }
-      const proj = getCurrentProject();
-      if (confirm(`Are you sure you want to delete "${proj.name}"?`)) {
-        AppState.tasks = AppState.tasks.filter(t => t.projectId !== AppState.activeProjectId);
-        AppState.projects = AppState.projects.filter(p => p.id !== AppState.activeProjectId);
-        AppState.activeProjectId = AppState.projects[0].id;
-        saveWorkspace();
-
-        if (supabase) {
-          try {
-            await supabase.from('projects').delete().eq('id', proj.id);
-          } catch(e) {}
-        }
-
+    function openNewProjectPrompt() {
+      const name = prompt('Enter new project name:');
+      if (name && name.trim()) {
+        const newProj = {
+          id: 'proj-' + Date.now(),
+          name: name.trim(),
+          description: '',
+          color: '#3b82f6',
+          sprints: [],
+          members: [AppState.currentUser.username]
+        };
+        AppState.projects.push(newProj);
+        AppState.activeProjectId = newProj.id;
+        saveState();
         syncProjectHeader();
         renderProjectsSidebar();
         renderTasksFeed();
         renderDashboardMetrics();
+        renderProjectMembers();
+      }
+    }
+
+    function deleteCurrentProject() {
+      if (AppState.projects.length <= 1) {
+        alert('You must have at least one project.');
+        return;
+      }
+      if (confirm(`Are you sure you want to delete "${getCurrentProject().name}"?`)) {
+        AppState.tasks = AppState.tasks.filter(t => t.projectId !== AppState.activeProjectId);
+        AppState.projects = AppState.projects.filter(p => p.id !== AppState.activeProjectId);
+        AppState.activeProjectId = AppState.projects[0].id;
+        saveState();
+        syncProjectHeader();
+        renderProjectsSidebar();
+        renderTasksFeed();
+        renderDashboardMetrics();
+        renderProjectMembers();
       }
     }
 
     function clearAllData() {
-      if (confirm('Clear browser cache and reload? This will resync from Supabase.')) {
+      if (confirm('Are you sure you want to reset everything back to a clean slate? All data will be erased.')) {
         localStorage.removeItem(STORAGE_KEY);
-        sessionStorage.removeItem(AUTH_SESSION_KEY);
         location.reload();
       }
     }
