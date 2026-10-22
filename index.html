@@ -50,7 +50,7 @@
         <p class="text-xs text-zinc-500">Sign in to your development workspace</p>
       </div>
 
-      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+      <form id="login-form" onsubmit="event.preventDefault(); handleLogin(event);" class="space-y-4">
         <div class="space-y-1.5">
           <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Username</label>
           <input 
@@ -82,7 +82,7 @@
         <button 
           type="submit" 
           id="btn-login-submit"
-          class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition shadow-sm mt-2"
+          class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition shadow-sm mt-2 cursor-pointer"
         >
           Sign In
         </button>
@@ -152,7 +152,7 @@
         <span class="text-zinc-500">Logged in as:</span>
         <span class="text-zinc-200 font-bold font-mono" id="active-user-display">---</span>
       </div>
-      <button onclick="handleLogout()" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-500 hover:text-rose-400 hover:bg-[#1a1c22] transition">
+      <button onclick="handleLogout()" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-500 hover:text-rose-400 hover:bg-[#1a1c22] transition cursor-pointer">
         <span>Sign Out</span>
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       </button>
@@ -206,7 +206,7 @@
             <span>+ Sprint Check-in</span>
           </button>
 
-          <button onclick="openCreateTaskModal()" class="text-xs font-semibold px-3 py-1 bg-white hover:bg-zinc-200 text-black rounded transition shadow-sm flex items-center gap-1.5">
+          <button onclick="openCreateTaskModal()" class="text-xs font-semibold px-3 py-1 bg-white hover:bg-zinc-200 text-black rounded transition shadow-sm flex items-center gap-1.5 cursor-pointer">
             <span>Add Task</span>
           </button>
         </div>
@@ -220,21 +220,21 @@
       <!-- Header bar with breadcrumbs and actions -->
       <header class="h-12 border-b border-[#1e2025] px-6 flex items-center justify-between shrink-0 bg-[#101115]">
         <div class="flex items-center gap-2 text-xs">
-          <button onclick="closeTaskDetailView()" title="Back to task list" class="text-zinc-400 hover:text-white mr-1 p-1">
+          <button onclick="closeTaskDetailView()" title="Back to task list" class="text-zinc-400 hover:text-white mr-1 p-1 cursor-pointer">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
           </button>
           <span class="text-zinc-400 font-medium" id="detail-project-name">Development</span>
           <span class="text-zinc-600">›</span>
-          <button onclick="closeTaskDetailView()" class="text-zinc-400 hover:text-zinc-200">Tasks</button>
+          <button onclick="closeTaskDetailView()" class="text-zinc-400 hover:text-zinc-200 cursor-pointer">Tasks</button>
           <span class="text-zinc-600">›</span>
           <span class="bg-[#1c1d22] text-zinc-200 px-2 py-0.5 rounded font-bold border border-[#272932]" id="detail-breadcrumb-title">sdf</span>
         </div>
 
         <div class="flex items-center gap-2">
-          <button onclick="copyCurrentTaskLink()" title="Copy Task Link" class="p-1.5 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] border border-[#24262e] rounded-lg text-xs transition">
+          <button onclick="copyCurrentTaskLink()" title="Copy Task Link" class="p-1.5 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] border border-[#24262e] rounded-lg text-xs transition cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
           </button>
-          <button onclick="closeTaskDetailView()" class="px-3 py-1 bg-[#1a1b22] hover:bg-[#22242d] text-zinc-300 hover:text-white rounded-lg text-xs border border-[#282a35] transition">
+          <button onclick="closeTaskDetailView()" class="px-3 py-1 bg-[#1a1b22] hover:bg-[#22242d] text-zinc-300 hover:text-white rounded-lg text-xs border border-[#282a35] transition cursor-pointer">
             Close
           </button>
         </div>
@@ -273,7 +273,7 @@
           </div>
         </div>
 
-        <!-- Right Side: Sidebar Controls (Assign, Status, Points, Priority, Sprint) -->
+        <!-- Right Side: Sidebar Controls -->
         <div class="w-80 bg-[#101115] p-6 flex flex-col justify-between overflow-y-auto">
           <div class="space-y-3">
             <!-- Status Button -->
@@ -374,7 +374,7 @@
             </div>
           </div>
 
-          <!-- Comment Box at Bottom Right (Matching screenshot) -->
+          <!-- Comment Box at Bottom Right -->
           <div class="space-y-2 pt-6 border-t border-[#1e2025]">
             <textarea 
               id="detail-comment-input" 
@@ -383,7 +383,7 @@
               class="w-full bg-[#14151a] border border-[#242631] rounded-xl p-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 resize-none"
             ></textarea>
             <div class="flex justify-end">
-              <button onclick="submitDetailComment()" class="px-4 py-1.5 bg-[#20222b] hover:bg-[#292c38] text-zinc-300 hover:text-white rounded-lg text-xs font-semibold transition border border-[#2c2f3c]">
+              <button onclick="submitDetailComment()" class="px-4 py-1.5 bg-[#20222b] hover:bg-[#292c38] text-zinc-300 hover:text-white rounded-lg text-xs font-semibold transition border border-[#2c2f3c] cursor-pointer">
                 Comment
               </button>
             </div>
@@ -480,10 +480,10 @@
           <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Danger Zone</div>
           <p class="text-xs text-zinc-500">Permanently delete this project or purge local cache.</p>
           <div class="flex gap-3">
-            <button onclick="deleteCurrentProject()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition">
+            <button onclick="deleteCurrentProject()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
               Delete Project
             </button>
-            <button onclick="clearAllData()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition">
+            <button onclick="clearAllData()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition cursor-pointer">
               Reset Local Storage
             </button>
           </div>
@@ -504,11 +504,11 @@
           </div>
           <!-- Passcode Protect Password Reveal -->
           <div id="password-visibility-controls">
-            <button onclick="openPasscodeModal()" id="btn-show-passwords" class="flex items-center gap-2 px-3 py-1.5 bg-[#1b1d24] hover:bg-[#232630] border border-[#2f3240] rounded-lg text-xs font-semibold text-amber-400 transition">
+            <button onclick="openPasscodeModal()" id="btn-show-passwords" class="flex items-center gap-2 px-3 py-1.5 bg-[#1b1d24] hover:bg-[#232630] border border-[#2f3240] rounded-lg text-xs font-semibold text-amber-400 transition cursor-pointer">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
               <span>Show Passwords</span>
             </button>
-            <button onclick="hidePasswords()" id="btn-hide-passwords" class="hidden flex items-center gap-2 px-3 py-1.5 bg-[#1b1d24] hover:bg-[#232630] border border-[#2f3240] rounded-lg text-xs font-semibold text-zinc-400 transition">
+            <button onclick="hidePasswords()" id="btn-hide-passwords" class="hidden flex items-center gap-2 px-3 py-1.5 bg-[#1b1d24] hover:bg-[#232630] border border-[#2f3240] rounded-lg text-xs font-semibold text-zinc-400 transition cursor-pointer">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
               <span>Hide Passwords</span>
             </button>
@@ -539,7 +539,7 @@
               </select>
             </div>
             <div class="flex items-end">
-              <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg transition shadow-sm">
+              <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg transition shadow-sm cursor-pointer">
                 Add User
               </button>
             </div>
@@ -582,10 +582,10 @@
           Incorrect passcode. Access denied.
         </div>
         <div class="flex gap-2">
-          <button type="button" onclick="closePasscodeModal()" class="w-1/2 py-2 text-xs text-zinc-400 hover:text-white rounded-lg bg-[#181920] border border-[#242632] transition">
+          <button type="button" onclick="closePasscodeModal()" class="w-1/2 py-2 text-xs text-zinc-400 hover:text-white rounded-lg bg-[#181920] border border-[#242632] transition cursor-pointer">
             Cancel
           </button>
-          <button type="submit" class="w-1/2 py-2 text-xs font-bold text-black bg-amber-500 hover:bg-amber-400 rounded-lg transition">
+          <button type="submit" class="w-1/2 py-2 text-xs font-bold text-black bg-amber-500 hover:bg-amber-400 rounded-lg transition cursor-pointer">
             Verify
           </button>
         </div>
@@ -596,7 +596,7 @@
   <!-- ======================== MODAL: CREATE PROJECT ======================== -->
   <div id="modal-create-project" class="hidden fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-[#141518] border border-[#262832] w-full max-w-md rounded-2xl p-7 shadow-2xl space-y-5 relative">
-      <button onclick="closeCreateProjectModal()" class="absolute top-5 right-5 text-zinc-500 hover:text-zinc-200 text-sm">✕</button>
+      <button onclick="closeCreateProjectModal()" class="absolute top-5 right-5 text-zinc-500 hover:text-zinc-200 text-sm cursor-pointer">✕</button>
       <h2 class="text-xl font-bold text-white tracking-tight">Create Project</h2>
 
       <form onsubmit="handleCreateProjectSubmit(event)" class="space-y-4">
@@ -617,7 +617,7 @@
           </select>
         </div>
 
-        <button type="submit" class="w-full py-3 bg-[#44464f] hover:bg-[#52545f] text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition shadow-sm">
+        <button type="submit" class="w-full py-3 bg-[#44464f] hover:bg-[#52545f] text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
           Create Project
         </button>
       </form>
@@ -629,7 +629,7 @@
     <div class="bg-[#15161a] border border-[#262832] w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5 relative">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold text-zinc-300 bg-[#202127] border border-[#2c2e38] px-2.5 py-0.5 rounded-md" id="modal-project-badge">Development</span>
-        <button onclick="closeCreateTaskModal()" class="text-zinc-500 hover:text-zinc-200 text-sm">✕</button>
+        <button onclick="closeCreateTaskModal()" class="text-zinc-500 hover:text-zinc-200 text-sm cursor-pointer">✕</button>
       </div>
 
       <div class="space-y-2">
@@ -640,7 +640,7 @@
       <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-[#1f2129]">
         <!-- Status -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('status')" id="btn-modal-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button type="button" onclick="toggleModalMenu('status')" id="btn-modal-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">◌</span>
             <span id="label-modal-status">Backlog</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -656,7 +656,7 @@
 
         <!-- Story Points -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('points')" id="btn-modal-points" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button type="button" onclick="toggleModalMenu('points')" id="btn-modal-points" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">⬡</span>
             <span id="label-modal-points">1 Point</span>
           </button>
@@ -671,7 +671,7 @@
 
         <!-- Priority -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('priority')" id="btn-modal-priority" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button type="button" onclick="toggleModalMenu('priority')" id="btn-modal-priority" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">一</span>
             <span id="label-modal-priority">None</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -687,7 +687,7 @@
 
         <!-- Issue Type -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('type')" id="btn-modal-type" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button type="button" onclick="toggleModalMenu('type')" id="btn-modal-type" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">⊞</span>
             <span id="label-modal-type">Task</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -704,7 +704,7 @@
 
         <!-- Assignee -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button type="button" onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">👤</span>
             <span id="label-modal-assignee">Unassigned</span>
           </button>
@@ -713,7 +713,7 @@
 
         <!-- Sprint -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('sprint')" id="btn-modal-sprint" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
+          <button type="button" onclick="toggleModalMenu('sprint')" id="btn-modal-sprint" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-cyan-400">◯</span>
             <span id="label-modal-sprint">No Sprint</span>
           </button>
@@ -722,22 +722,14 @@
       </div>
 
       <div class="flex justify-end gap-2 pt-3 border-t border-[#1f2129]">
-        <button type="button" onclick="closeCreateTaskModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white transition">Cancel</button>
-        <button type="button" onclick="submitNewTask()" class="px-5 py-2 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition">Create</button>
+        <button type="button" onclick="closeCreateTaskModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white transition cursor-pointer">Cancel</button>
+        <button type="button" onclick="submitNewTask()" class="px-5 py-2 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition cursor-pointer">Create</button>
       </div>
     </div>
   </div>
 
   <!-- ======================== APPLICATION LOGIC ======================== -->
   <script>
-    const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
-    const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
-
-    let supabase = null;
-    if (window.supabase && SUPABASE_URL !== "https://YOUR_PROJECT_ID.supabase.co") {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
-
     const STORAGE_KEY = 'vandrik_full_workspace_v4';
     const AUTH_SESSION_KEY = 'vandrik_active_user_session';
     const PASSWORDS_REVEALED_KEY = 'vandrik_passwords_revealed_session';
@@ -778,7 +770,7 @@
       sprint: 'No Sprint'
     };
 
-    function loadWorkspaceFromCloudOrLocal() {
+    function loadWorkspace() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
@@ -794,7 +786,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      loadWorkspaceFromCloudOrLocal();
+      loadWorkspace();
       checkAuth();
 
       if (!AppState.projects.some(p => p.id === AppState.activeProjectId)) {
@@ -843,7 +835,7 @@
     }
 
     function handleLogin(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
       const u = document.getElementById('login-username').value.trim();
       const p = document.getElementById('login-password').value.trim();
       const errBox = document.getElementById('login-error');
@@ -852,11 +844,12 @@
 
       if (matched) {
         sessionStorage.setItem(AUTH_SESSION_KEY, matched.username);
-        errBox.classList.add('hidden');
+        if (errBox) errBox.classList.add('hidden');
         checkAuth();
       } else {
-        errBox.classList.remove('hidden');
+        if (errBox) errBox.classList.remove('hidden');
       }
+      return false;
     }
 
     function handleLogout() {
@@ -987,7 +980,7 @@
             </div>
             <div>
               ${u.username !== 'atlantis8998' ? `
-                <button onclick="deleteUser('${escapeHtml(u.username)}')" class="px-2.5 py-1 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded transition text-xs">
+                <button onclick="deleteUser('${escapeHtml(u.username)}')" class="px-2.5 py-1 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded transition text-xs cursor-pointer">
                   Delete
                 </button>
               ` : '<span class="text-xs text-zinc-600 italic">Root Admin</span>'}
@@ -1180,7 +1173,7 @@
                   <span>${group.name} - ${groupTasks.length}</span>
                   <span class="text-zinc-600">⬡</span>
                 </div>
-                <button onclick="openCreateTaskModal('${group.targetField}', '${group.targetValue}')" class="text-zinc-500 hover:text-zinc-300 text-xs">+</button>
+                <button onclick="openCreateTaskModal('${group.targetField}', '${group.targetValue}')" class="text-zinc-500 hover:text-zinc-300 text-xs cursor-pointer">+</button>
               </div>
               <div class="space-y-1">
                 ${groupTasks.length > 0 
@@ -1200,7 +1193,7 @@
       return `
         <div onclick="openTaskDetailView('${task.id}')" class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] rounded-xl px-4 py-2.5 flex items-center justify-between gap-4 transition group cursor-pointer">
           <div class="flex items-center gap-3">
-            <button onclick="event.stopPropagation(); cycleTaskStatus('${task.id}')" title="Cycle Status" class="text-xs ${statusIcon.color}">${statusIcon.icon}</button>
+            <button onclick="event.stopPropagation(); cycleTaskStatus('${task.id}')" title="Cycle Status" class="text-xs ${statusIcon.color} cursor-pointer">${statusIcon.icon}</button>
             <span class="text-[10px] font-mono border border-[#2b2e38] bg-[#1a1b22] px-1.5 py-0.5 rounded text-zinc-400">${pointsNum === 'No' ? '0' : pointsNum}</span>
             <span class="text-xs font-medium text-white group-hover:text-amber-400 transition">${escapeHtml(task.title)}</span>
           </div>
@@ -1209,7 +1202,7 @@
             <span class="text-[11px] px-2 py-0.5 rounded bg-[#181920] border border-[#252732] text-zinc-300">⊞ ${task.type}</span>
             <span class="text-[11px] text-zinc-400 cursor-pointer hover:text-white" onclick="openTaskDetailView('${task.id}')">👤 ${escapeHtml(task.assignee)}</span>
             ${task.sprint !== 'No Sprint' ? `<span class="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.5 rounded">◯ ${escapeHtml(task.sprint.split(' ')[0])}</span>` : ''}
-            <button onclick="deleteTask('${task.id}')" title="Delete Task" class="text-zinc-600 hover:text-rose-400 text-xs ml-1">✕</button>
+            <button onclick="deleteTask('${task.id}')" title="Delete Task" class="text-zinc-600 hover:text-rose-400 text-xs ml-1 cursor-pointer">✕</button>
           </div>
         </div>
       `;
@@ -1312,13 +1305,11 @@
       document.getElementById('view-tasks').classList.add('hidden');
       document.getElementById('view-task-detail').classList.remove('hidden');
 
-      // Populate Breadcrumb & Content
       document.getElementById('detail-project-name').innerText = project.name;
       document.getElementById('detail-breadcrumb-title').innerText = task.title;
       document.getElementById('detail-title-input').value = task.title;
       document.getElementById('detail-desc-input').value = task.description || '';
 
-      // Populate Attributes Panel
       syncDetailSidebarUI(task);
       renderDetailAssigneeOptions();
       renderDetailSprintOptions();
@@ -1368,7 +1359,6 @@
       const activeUser = getActiveSession() || 'Connor Wilkins';
       task[attr] = value;
 
-      // Add to activity history
       if (!task.activity) task.activity = [];
       task.activity.unshift({
         author: activeUser,
@@ -1386,13 +1376,13 @@
     function renderDetailAssigneeOptions() {
       const pop = document.getElementById('pop-detail-assignee');
       let html = `
-        <button onclick="setDetailTaskAttr('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded">
+        <button onclick="setDetailTaskAttr('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">
           <span>✕</span> Unassigned
         </button>
       `;
       AppState.users.forEach(u => {
         html += `
-          <button onclick="setDetailTaskAttr('assignee', '${escapeHtml(u.username)}')" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-zinc-200 hover:bg-[#20222a] rounded">
+          <button onclick="setDetailTaskAttr('assignee', '${escapeHtml(u.username)}')" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">
             <div class="flex items-center gap-2">
               <span class="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold">${u.username[0]?.toUpperCase()}</span>
               <span>${escapeHtml(u.username)}</span>
@@ -1407,9 +1397,9 @@
     function renderDetailSprintOptions() {
       const proj = getCurrentProject();
       const pop = document.getElementById('pop-detail-sprint');
-      let html = `<button onclick="setDetailTaskAttr('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✕ No Sprint</button>`;
+      let html = `<button onclick="setDetailTaskAttr('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✕ No Sprint</button>`;
       proj.sprints.forEach(sp => {
-        html += `<button onclick="setDetailTaskAttr('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-300 hover:bg-[#20222a] rounded">◯ ${escapeHtml(sp.name)}</button>`;
+        html += `<button onclick="setDetailTaskAttr('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-300 hover:bg-[#20222a] rounded cursor-pointer">◯ ${escapeHtml(sp.name)}</button>`;
       });
       pop.innerHTML = html;
     }
@@ -1550,19 +1540,19 @@
     function renderModalSprintOptions() {
       const proj = getCurrentProject();
       const sprintPop = document.getElementById('pop-modal-sprint');
-      let html = `<button type="button" onclick="selectModalAttribute('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ No Sprint</button>`;
+      let html = `<button type="button" onclick="selectModalAttribute('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ No Sprint</button>`;
       proj.sprints.forEach(sp => {
-        html += `<button type="button" onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded">◯ ${escapeHtml(sp.name)}</button>`;
+        html += `<button type="button" onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded cursor-pointer">◯ ${escapeHtml(sp.name)}</button>`;
       });
       sprintPop.innerHTML = html;
     }
 
     function renderModalAssigneeOptions() {
       const pop = document.getElementById('pop-modal-assignee');
-      let html = `<button type="button" onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ Unassigned</button>`;
+      let html = `<button type="button" onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ Unassigned</button>`;
       AppState.users.forEach(u => {
         html += `
-          <button type="button" onclick="selectModalAttribute('assignee', '${escapeHtml(u.username)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">
+          <button type="button" onclick="selectModalAttribute('assignee', '${escapeHtml(u.username)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">
             <span class="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-bold">${u.username[0]?.toUpperCase()}</span>
             <span>${escapeHtml(u.username)}</span>
           </button>
