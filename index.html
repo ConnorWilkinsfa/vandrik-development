@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vandrik Development - Project & Task Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     tailwind.config = {
@@ -39,6 +40,9 @@
 </head>
 <body class="bg-[#0e0f12] text-zinc-200 font-sans antialiased flex h-screen overflow-hidden select-none">
 
+  <!-- ======================== TOAST NOTIFICATION CONTAINER ======================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[200] flex flex-col gap-2 pointer-events-none"></div>
+
   <!-- ======================== LOGIN / AUTH OVERLAY ======================== -->
   <div id="auth-overlay" class="fixed inset-0 bg-[#0c0d0e] z-[100] flex items-center justify-center p-4">
     <div class="bg-[#141519] border border-[#24262f] w-full max-w-sm rounded-2xl p-7 shadow-2xl space-y-6">
@@ -50,7 +54,7 @@
         <p class="text-xs text-zinc-500">Sign in to your development workspace</p>
       </div>
 
-      <form id="login-form" onsubmit="event.preventDefault(); handleLogin(event);" class="space-y-4">
+      <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
         <div class="space-y-1.5">
           <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Username</label>
           <input 
@@ -181,28 +185,28 @@
             </button>
 
             <div id="menu-grouping" class="hidden absolute right-0 mt-1.5 w-44 bg-[#141519] border border-[#262831] rounded-xl shadow-2xl p-1 z-30 space-y-0.5">
-              <button onclick="setGrouping('none')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
+              <button onclick="setGrouping('none')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
                 <span class="w-4 text-center">✓</span> No Grouping
               </button>
-              <button onclick="setGrouping('status')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
+              <button onclick="setGrouping('status')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
                 <span class="w-4 text-center">◌</span> Status
               </button>
-              <button onclick="setGrouping('priority')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
+              <button onclick="setGrouping('priority')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
                 <span class="w-4 text-center">⇅</span> Priority
               </button>
-              <button onclick="setGrouping('type')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
+              <button onclick="setGrouping('type')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
                 <span class="w-4 text-center">✳</span> Type
               </button>
-              <button onclick="setGrouping('assignee')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
+              <button onclick="setGrouping('assignee')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
                 <span class="w-4 text-center">👤</span> Assignee
               </button>
-              <button onclick="setGrouping('sprint')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
+              <button onclick="setGrouping('sprint')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24] cursor-pointer">
                 <span class="w-4 text-center">◯</span> Sprint
               </button>
             </div>
           </div>
 
-          <button onclick="promptCreateSprint()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
+          <button onclick="openCreateSprintModal()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
             <span>+ Sprint Check-in</span>
           </button>
 
@@ -213,181 +217,6 @@
       </header>
 
       <div class="flex-1 overflow-y-auto p-6 space-y-6" id="tasks-container"></div>
-    </section>
-
-    <!-- TASK DETAIL VIEW (SCREENSHOT MATCH) -->
-    <section id="view-task-detail" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-[#0e0f12]">
-      <header class="h-12 border-b border-[#1e2025] px-6 flex items-center justify-between shrink-0 bg-[#101115]">
-        <div class="flex items-center gap-2 text-xs">
-          <button onclick="closeTaskDetailView()" title="Back to task list" class="text-zinc-400 hover:text-white mr-1 p-1 cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
-          </button>
-          <span class="text-zinc-400 font-medium" id="detail-project-name">Development</span>
-          <span class="text-zinc-600">›</span>
-          <button onclick="closeTaskDetailView()" class="text-zinc-400 hover:text-zinc-200 cursor-pointer">Tasks</button>
-          <span class="text-zinc-600">›</span>
-          <span class="bg-[#1c1d22] text-zinc-200 px-2 py-0.5 rounded font-bold border border-[#272932]" id="detail-breadcrumb-title">sdf</span>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button onclick="copyCurrentTaskLink()" title="Copy Task Link" class="p-1.5 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] border border-[#24262e] rounded-lg text-xs transition cursor-pointer">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-          </button>
-          <button onclick="closeTaskDetailView()" class="px-3 py-1 bg-[#1a1b22] hover:bg-[#22242d] text-zinc-300 hover:text-white rounded-lg text-xs border border-[#282a35] transition cursor-pointer">
-            Close
-          </button>
-        </div>
-      </header>
-
-      <div class="flex-1 flex overflow-hidden">
-        <!-- Left Side: Task Content & Activity Feed -->
-        <div class="flex-1 overflow-y-auto p-8 space-y-8 border-r border-[#1e2025]">
-          <div class="space-y-3">
-            <input 
-              type="text" 
-              id="detail-title-input" 
-              onchange="updateDetailTitle(this.value)" 
-              class="w-full text-2xl font-bold text-white bg-transparent focus:outline-none border-b border-transparent focus:border-zinc-700 py-1"
-            />
-            <textarea 
-              id="detail-desc-input" 
-              rows="3" 
-              onchange="updateDetailDesc(this.value)" 
-              placeholder="Add a more detailed description..." 
-              class="w-full bg-transparent text-sm text-zinc-300 placeholder-zinc-600 focus:outline-none resize-none"
-            ></textarea>
-          </div>
-
-          <div class="pt-6 border-t border-[#1a1c22] space-y-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-bold text-white">Activity</h3>
-              <span class="text-xs text-zinc-500" id="detail-last-viewed">You last viewed just now</span>
-            </div>
-
-            <div id="detail-activity-timeline" class="space-y-4"></div>
-          </div>
-        </div>
-
-        <!-- Right Side: Sidebar Controls (Assign restricted to admin) -->
-        <div class="w-80 bg-[#101115] p-6 flex flex-col justify-between overflow-y-auto">
-          <div class="space-y-3">
-            <!-- Status Button -->
-            <div class="relative">
-              <button onclick="toggleDetailDropdown('status')" id="btn-detail-status" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
-                <div class="flex items-center gap-2.5">
-                  <span id="detail-icon-status">◌</span>
-                  <span id="detail-label-status" class="font-medium">Backlog</span>
-                </div>
-                <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-              <div id="pop-detail-status" class="hidden absolute top-full mt-1 left-0 w-full bg-[#16171d] border border-[#282b36] rounded-xl shadow-2xl p-1 z-50 space-y-0.5">
-                <button onclick="setDetailTaskAttr('status', 'Backlog')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20222a] rounded"><span>◌</span> Backlog</button>
-                <button onclick="setDetailTaskAttr('status', 'To Do')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-lime-400 hover:bg-[#20222a] rounded"><span>◉</span> To Do</button>
-                <button onclick="setDetailTaskAttr('status', 'In Progress')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-amber-400 hover:bg-[#20222a] rounded"><span>◑</span> In Progress</button>
-                <button onclick="setDetailTaskAttr('status', 'In Review')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-400 hover:bg-[#20222a] rounded"><span>👁</span> In Review</button>
-                <button onclick="setDetailTaskAttr('status', 'Done')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-emerald-400 hover:bg-[#20222a] rounded"><span>✓</span> Done</button>
-              </div>
-            </div>
-
-            <!-- Assignee Button (LOCKED FOR NON-ADMINS) -->
-            <div class="relative">
-              <button onclick="toggleDetailDropdown('assignee')" id="btn-detail-assignee" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-zinc-400">👤</span>
-                  <span id="detail-label-assignee" class="font-medium">Unassigned</span>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span id="assignee-lock-icon" class="hidden text-[10px] text-zinc-500">🔒</span>
-                  <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
-              </button>
-              <div id="pop-detail-assignee" class="hidden absolute top-full mt-1 left-0 w-full bg-[#16171d] border border-[#282b36] rounded-xl shadow-2xl p-1 z-50 space-y-0.5 max-h-56 overflow-y-auto"></div>
-            </div>
-
-            <!-- Story Points Button -->
-            <div class="relative">
-              <button onclick="toggleDetailDropdown('points')" id="btn-detail-points" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-zinc-400">⬡</span>
-                  <span id="detail-label-points" class="font-medium">1 Point</span>
-                </div>
-                <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-              <div id="pop-detail-points" class="hidden absolute top-full mt-1 left-0 w-full bg-[#16171d] border border-[#282b36] rounded-xl shadow-2xl p-1 z-50 space-y-0.5">
-                <button onclick="setDetailTaskAttr('points', 'No Estimate')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded">⬡ No Estimate</button>
-                <button onclick="setDetailTaskAttr('points', '1 Point')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 1 Point</button>
-                <button onclick="setDetailTaskAttr('points', '2 Points')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 2 Points</button>
-                <button onclick="setDetailTaskAttr('points', '3 Points')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 3 Points</button>
-                <button onclick="setDetailTaskAttr('points', '5 Points')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 5 Points</button>
-              </div>
-            </div>
-
-            <!-- Issue Type Button -->
-            <div class="relative">
-              <button onclick="toggleDetailDropdown('type')" id="btn-detail-type" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-zinc-400">⊞</span>
-                  <span id="detail-label-type" class="font-medium">Task</span>
-                </div>
-                <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-              <div id="pop-detail-type" class="hidden absolute top-full mt-1 left-0 w-full bg-[#16171d] border border-[#282b36] rounded-xl shadow-2xl p-1 z-50 space-y-0.5">
-                <button onclick="setDetailTaskAttr('type', 'Task')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-300 hover:bg-[#20222a] rounded">⊞ Task</button>
-                <button onclick="setDetailTaskAttr('type', 'Feature')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-purple-400 hover:bg-[#20222a] rounded">⚑ Feature</button>
-                <button onclick="setDetailTaskAttr('type', 'Improvement')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-blue-400 hover:bg-[#20222a] rounded">📈 Improvement</button>
-                <button onclick="setDetailTaskAttr('type', 'Research')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-teal-400 hover:bg-[#20222a] rounded">🔍 Research</button>
-                <button onclick="setDetailTaskAttr('type', 'Testing')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-amber-400 hover:bg-[#20222a] rounded">🧪 Testing</button>
-                <button onclick="setDetailTaskAttr('type', 'Bug')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-rose-400 hover:bg-[#20222a] rounded">🪲 Bug</button>
-              </div>
-            </div>
-
-            <!-- Sprint Button -->
-            <div class="relative">
-              <button onclick="toggleDetailDropdown('sprint')" id="btn-detail-sprint" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-cyan-400">◯</span>
-                  <span id="detail-label-sprint" class="font-medium">No Sprint</span>
-                </div>
-                <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-              <div id="pop-detail-sprint" class="hidden absolute top-full mt-1 left-0 w-full bg-[#16171d] border border-[#282b36] rounded-xl shadow-2xl p-1 z-50 space-y-0.5"></div>
-            </div>
-
-            <!-- Priority Button -->
-            <div class="relative">
-              <button onclick="toggleDetailDropdown('priority')" id="btn-detail-priority" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-[#15161c] hover:bg-[#1a1c24] border border-[#242631] text-xs text-zinc-200 transition cursor-pointer">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-zinc-400">一</span>
-                  <span id="detail-label-priority" class="font-medium">None</span>
-                </div>
-                <svg class="w-3 h-3 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-              <div id="pop-detail-priority" class="hidden absolute top-full mt-1 left-0 w-full bg-[#16171d] border border-[#282b36] rounded-xl shadow-2xl p-1 z-50 space-y-0.5">
-                <button onclick="setDetailTaskAttr('priority', 'None')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded">一 None</button>
-                <button onclick="setDetailTaskAttr('priority', 'Low')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-blue-400 hover:bg-[#20222a] rounded">↓ Low</button>
-                <button onclick="setDetailTaskAttr('priority', 'Medium')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-400 hover:bg-[#20222a] rounded">→ Medium</button>
-                <button onclick="setDetailTaskAttr('priority', 'High')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-amber-400 hover:bg-[#20222a] rounded">↑ High</button>
-                <button onclick="setDetailTaskAttr('priority', 'Critical')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-rose-400 hover:bg-[#20222a] rounded">⚠ Critical</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Comment Box at Bottom Right -->
-          <div class="space-y-2 pt-6 border-t border-[#1e2025]">
-            <textarea 
-              id="detail-comment-input" 
-              rows="3" 
-              placeholder="Add a comment..." 
-              class="w-full bg-[#14151a] border border-[#242631] rounded-xl p-3 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 resize-none"
-            ></textarea>
-            <div class="flex justify-end">
-              <button onclick="submitDetailComment()" class="px-4 py-1.5 bg-[#20222b] hover:bg-[#292c38] text-zinc-300 hover:text-white rounded-lg text-xs font-semibold transition border border-[#2c2f3c] cursor-pointer">
-                Comment
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
 
     <!-- DASHBOARD VIEW -->
@@ -428,7 +257,7 @@
       </div>
     </section>
 
-    <!-- SETTINGS VIEW (ADMIN ONLY PROJECT DELETION) -->
+    <!-- SETTINGS VIEW -->
     <section id="view-settings" class="hidden flex-1 overflow-y-auto p-10 space-y-8">
       <div class="max-w-3xl space-y-6">
         <div>
@@ -449,7 +278,7 @@
 
           <div class="space-y-2">
             <label class="text-xs font-semibold text-zinc-400">Sprint Check-in Cadence</label>
-            <select id="setting-project-duration" onchange="updateProjectDuration(this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+            <select id="setting-project-duration" onchange="updateProjectDuration(this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none cursor-pointer">
               <option value="1 Week">1 Week</option>
               <option value="2 Weeks">2 Weeks</option>
               <option value="3 Weeks">3 Weeks</option>
@@ -476,12 +305,12 @@
 
         <div class="bg-[#141519] border border-[#2a171a] rounded-xl p-6 space-y-3">
           <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Danger Zone</div>
-          <p class="text-xs text-zinc-500">Project deletion is restricted to Administrators.</p>
+          <p class="text-xs text-zinc-500">Permanently delete this project or purge local cache.</p>
           <div class="flex gap-3">
-            <button id="btn-delete-project" onclick="deleteCurrentProject()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
+            <button onclick="confirmAction('Delete Project', 'Are you sure you want to delete this project and all its tasks?', deleteCurrentProject)" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
               Delete Project
             </button>
-            <button onclick="clearAllData()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition cursor-pointer">
+            <button onclick="confirmAction('Reset Local Storage', 'Clear local cache and reload from Supabase?', clearAllData)" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition cursor-pointer">
               Reset Local Storage
             </button>
           </div>
@@ -513,6 +342,7 @@
           </div>
         </div>
 
+        <!-- Create User Card -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
           <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
             <span>+ Create New User Login</span>
@@ -529,7 +359,7 @@
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Role</label>
-              <select id="new-user-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none">
+              <select id="new-user-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none cursor-pointer">
                 <option value="Developer">Developer</option>
                 <option value="Admin">Admin</option>
                 <option value="Viewer">Viewer</option>
@@ -543,6 +373,7 @@
           </form>
         </div>
 
+        <!-- Users Table -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl overflow-hidden">
           <div class="p-4 border-b border-[#1e2025] flex items-center justify-between">
             <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">All Registered Users</span>
@@ -553,6 +384,40 @@
       </div>
     </section>
   </main>
+
+  <!-- ======================== MODAL: IN-APP CONFIRMATION ======================== -->
+  <div id="modal-confirm" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-[#141518] border border-[#262832] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
+      <div>
+        <h3 class="text-sm font-bold text-white" id="confirm-modal-title">Confirm Action</h3>
+        <p class="text-xs text-zinc-400 mt-1" id="confirm-modal-desc">Are you sure you want to proceed?</p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeConfirmModal(false)" class="px-3 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg bg-[#181920] border border-[#242632] transition cursor-pointer">Cancel</button>
+        <button type="button" onclick="closeConfirmModal(true)" id="confirm-modal-action-btn" class="px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition cursor-pointer">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== MODAL: IN-APP SPRINT CHECK-IN CREATION ======================== -->
+  <div id="modal-create-sprint" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-[#141518] border border-[#262832] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
+      <div>
+        <h3 class="text-sm font-bold text-white">New Sprint Check-In</h3>
+        <p class="text-xs text-zinc-400 mt-1">Schedule a sprint cycle for deliverables tracking.</p>
+      </div>
+      <form onsubmit="handleCreateSprintSubmit(event)" class="space-y-3">
+        <div class="space-y-1">
+          <label class="text-[11px] font-semibold text-zinc-400">Sprint Title</label>
+          <input type="text" id="new-sprint-name" required placeholder="Sprint 2 [2 Weeks Check-in]" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeCreateSprintModal()" class="px-3 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg bg-[#181920] border border-[#242632] transition cursor-pointer">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 text-xs font-bold text-black bg-cyan-400 hover:bg-cyan-300 rounded-lg transition cursor-pointer">Add Sprint</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ======================== MODAL: PASSCODE VERIFICATION (0107) ======================== -->
   <div id="modal-passcode-gate" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
@@ -642,11 +507,11 @@
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-status" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('status', 'Backlog')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded"><span>◌</span> Backlog</button>
-            <button type="button" onclick="selectModalAttribute('status', 'To Do')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-lime-400 hover:bg-[#20222a] rounded"><span>◉</span> To Do</button>
-            <button type="button" onclick="selectModalAttribute('status', 'In Progress')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded"><span>◑</span> In Progress</button>
-            <button type="button" onclick="selectModalAttribute('status', 'In Review')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded"><span>👁</span> In Review</button>
-            <button type="button" onclick="selectModalAttribute('status', 'Done')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-emerald-400 hover:bg-[#20222a] rounded"><span>✓</span> Done</button>
+            <button type="button" onclick="selectModalAttribute('status', 'Backlog')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded cursor-pointer"><span>◌</span> Backlog</button>
+            <button type="button" onclick="selectModalAttribute('status', 'To Do')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-lime-400 hover:bg-[#20222a] rounded cursor-pointer"><span>◉</span> To Do</button>
+            <button type="button" onclick="selectModalAttribute('status', 'In Progress')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded cursor-pointer"><span>◑</span> In Progress</button>
+            <button type="button" onclick="selectModalAttribute('status', 'In Review')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded cursor-pointer"><span>👁</span> In Review</button>
+            <button type="button" onclick="selectModalAttribute('status', 'Done')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-emerald-400 hover:bg-[#20222a] rounded cursor-pointer"><span>✓</span> Done</button>
           </div>
         </div>
 
@@ -657,11 +522,11 @@
             <span id="label-modal-points">1 Point</span>
           </button>
           <div id="pop-modal-points" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('points', 'No Estimate')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">⬡ No Estimate</button>
-            <button type="button" onclick="selectModalAttribute('points', '1 Point')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 1 Point</button>
-            <button type="button" onclick="selectModalAttribute('points', '2 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 2 Points</button>
-            <button type="button" onclick="selectModalAttribute('points', '3 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 3 Points</button>
-            <button type="button" onclick="selectModalAttribute('points', '5 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 5 Points</button>
+            <button type="button" onclick="selectModalAttribute('points', 'No Estimate')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">⬡ No Estimate</button>
+            <button type="button" onclick="selectModalAttribute('points', '1 Point')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 1 Point</button>
+            <button type="button" onclick="selectModalAttribute('points', '2 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 2 Points</button>
+            <button type="button" onclick="selectModalAttribute('points', '3 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 3 Points</button>
+            <button type="button" onclick="selectModalAttribute('points', '5 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 5 Points</button>
           </div>
         </div>
 
@@ -673,11 +538,11 @@
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-priority" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('priority', 'None')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">一 None</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Low')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">↓ Low</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Medium')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded">→ Medium</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'High')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded">↑ High</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Critical')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">⚠ Critical</button>
+            <button type="button" onclick="selectModalAttribute('priority', 'None')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">一 None</button>
+            <button type="button" onclick="selectModalAttribute('priority', 'Low')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded cursor-pointer">↓ Low</button>
+            <button type="button" onclick="selectModalAttribute('priority', 'Medium')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded cursor-pointer">→ Medium</button>
+            <button type="button" onclick="selectModalAttribute('priority', 'High')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded cursor-pointer">↑ High</button>
+            <button type="button" onclick="selectModalAttribute('priority', 'Critical')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded cursor-pointer">⚠ Critical</button>
           </div>
         </div>
 
@@ -689,22 +554,22 @@
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-type" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('type', 'Task')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded">⊞ Task</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Feature')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-purple-400 hover:bg-[#20222a] rounded">⚑ Feature</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Improvement')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">📈 Improvement</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Research')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-teal-400 hover:bg-[#20222a] rounded">🔍 Research</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Testing')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded">🧪 Testing</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Bug')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">🪲 Bug</button>
+            <button type="button" onclick="selectModalAttribute('type', 'Task')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded cursor-pointer">⊞ Task</button>
+            <button type="button" onclick="selectModalAttribute('type', 'Feature')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-purple-400 hover:bg-[#20222a] rounded cursor-pointer">⚑ Feature</button>
+            <button type="button" onclick="selectModalAttribute('type', 'Improvement')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded cursor-pointer">📈 Improvement</button>
+            <button type="button" onclick="selectModalAttribute('type', 'Research')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-teal-400 hover:bg-[#20222a] rounded cursor-pointer">🔍 Research</button>
+            <button type="button" onclick="selectModalAttribute('type', 'Testing')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded cursor-pointer">🧪 Testing</button>
+            <button type="button" onclick="selectModalAttribute('type', 'Bug')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded cursor-pointer">🪲 Bug</button>
           </div>
         </div>
 
-        <!-- Assignee (Admin only) -->
+        <!-- Assignee -->
         <div class="relative">
           <button type="button" onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">👤</span>
             <span id="label-modal-assignee">Unassigned</span>
           </button>
-          <div id="pop-modal-assignee" class="hidden absolute bottom-full mb-1 left-0 w-44 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5"></div>
+          <div id="pop-modal-assignee" class="hidden absolute bottom-full mb-1 left-0 w-44 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5 max-h-48 overflow-y-auto"></div>
         </div>
 
         <!-- Sprint -->
@@ -726,12 +591,22 @@
 
   <!-- ======================== APPLICATION LOGIC ======================== -->
   <script>
+    // -------------------------------------------------------------
+    // SUPABASE CREDENTIALS (REPLACE WITH YOUR OWN FROM SUPABASE SETTINGS > API)
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://xlbhnzbpljpkxlkxehqq.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYmhuemJwbGpwa3hsa3hlaHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDI4MzYsImV4cCI6MjEwODI3ODgzNn0.k__ntBUjHHR8VVpSFP41u0G9HRlPJeohzhT452vw5sw";
+
+    let supabase = null;
+    if (window.supabase) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
     const STORAGE_KEY = 'vandrik_full_workspace_v4';
     const AUTH_SESSION_KEY = 'vandrik_active_user_session';
     const PASSWORDS_REVEALED_KEY = 'vandrik_passwords_revealed_session';
     const MASTER_PIN = "0107";
 
-    // Default In-Memory Workspace
+    // Pre-seeded with all 11 user logins from your workspace list
     const INITIAL_WORKSPACE = {
       activeProjectId: 'proj-1',
       groupingMode: 'none',
@@ -764,7 +639,6 @@
     };
 
     let AppState = JSON.parse(JSON.stringify(INITIAL_WORKSPACE));
-    let activeDetailTaskId = null;
 
     let draftTask = {
       status: 'Backlog',
@@ -775,7 +649,95 @@
       sprint: 'No Sprint'
     };
 
-    function loadWorkspace() {
+    // -------------------------------------------------------------
+    // TOAST NOTIFICATIONS
+    // -------------------------------------------------------------
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xl flex items-center gap-2 border transition-all duration-300 pointer-events-auto transform translate-y-2 opacity-0 ${
+        type === 'success' ? 'bg-[#12281e] text-emerald-300 border-emerald-500/30' :
+        type === 'error' ? 'bg-[#2a1318] text-rose-300 border-rose-500/30' :
+        'bg-[#171922] text-zinc-200 border-[#2b2e3c]'
+      }`;
+      toast.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ'}</span> <span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // -------------------------------------------------------------
+    // IN-APP CONFIRMATION MODAL
+    // -------------------------------------------------------------
+    let pendingConfirmAction = null;
+    function confirmAction(title, desc, onConfirm) {
+      document.getElementById('confirm-modal-title').innerText = title;
+      document.getElementById('confirm-modal-desc').innerText = desc;
+      pendingConfirmAction = onConfirm;
+      document.getElementById('modal-confirm').classList.remove('hidden');
+    }
+
+    function closeConfirmModal(accepted) {
+      document.getElementById('modal-confirm').classList.add('hidden');
+      if (accepted && pendingConfirmAction) {
+        pendingConfirmAction();
+      }
+      pendingConfirmAction = null;
+    }
+
+    // -------------------------------------------------------------
+    // CLOUD & LOCAL STORAGE SYNC
+    // -------------------------------------------------------------
+    async function loadWorkspaceFromCloudOrLocal() {
+      if (supabase) {
+        try {
+          const [uRes, pRes, tRes] = await Promise.all([
+            supabase.from('users').select('*'),
+            supabase.from('projects').select('*'),
+            supabase.from('tasks').select('*')
+          ]);
+
+          if (!uRes.error && uRes.data && uRes.data.length > 0) {
+            AppState.users = uRes.data.map(u => ({ username: u.username, password: u.password, role: u.role, createdAt: u.created_at }));
+          }
+          if (!pRes.error && pRes.data && pRes.data.length > 0) {
+            AppState.projects = pRes.data.map(p => ({
+              id: p.id,
+              name: p.name,
+              sprintDuration: p.sprint_duration,
+              description: p.description,
+              color: p.color,
+              sprints: p.sprints || []
+            }));
+          }
+          if (!tRes.error && tRes.data) {
+            AppState.tasks = tRes.data.map(t => ({
+              id: t.id,
+              projectId: t.project_id,
+              title: t.title,
+              description: t.description,
+              status: t.status,
+              points: t.points,
+              priority: t.priority,
+              type: t.type,
+              assignee: t.assignee,
+              sprint: t.sprint
+            }));
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
+          return;
+        } catch (err) {
+          console.warn("Supabase fetch error, fallback to local:", err);
+        }
+      }
+
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
@@ -790,17 +752,11 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
     }
 
-    // Role verification
-    function isCurrentUserAdmin() {
-      const username = getActiveSession();
-      if (!username) return false;
-      if (username === 'atlantis8998') return true;
-      const user = AppState.users.find(u => u.username === username);
-      return user && user.role === 'Admin';
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      loadWorkspace();
+    // -------------------------------------------------------------
+    // APPLICATION LIFECYCLE & REALTIME SUBSCRIPTION
+    // -------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadWorkspaceFromCloudOrLocal();
       checkAuth();
 
       if (!AppState.projects.some(p => p.id === AppState.activeProjectId)) {
@@ -813,6 +769,22 @@
       renderDashboardMetrics();
       renderAdminUsers();
       updatePasswordVisibilityUI();
+
+      // Listen for task changes made by other users in real time
+      if (supabase) {
+        supabase
+          .channel('schema-db-changes')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'tasks' },
+            async () => {
+              await loadWorkspaceFromCloudOrLocal();
+              renderTasksFeed();
+              renderDashboardMetrics();
+            }
+          )
+          .subscribe();
+      }
     });
 
     // -------------------------------------------------------------
@@ -828,7 +800,6 @@
       const adminNav = document.getElementById('nav-admin');
       const userDisplay = document.getElementById('active-user-display');
       const roleBadge = document.getElementById('role-indicator-badge');
-      const deleteProjBtn = document.getElementById('btn-delete-project');
 
       if (username) {
         overlay.classList.add('hidden');
@@ -838,13 +809,10 @@
         const role = currentUser ? currentUser.role : 'Developer';
         roleBadge.innerText = role;
 
-        const isAdmin = isCurrentUserAdmin();
-        if (isAdmin) {
+        if (username === 'atlantis8998' || role === 'Admin') {
           adminNav.classList.remove('hidden');
-          if (deleteProjBtn) deleteProjBtn.classList.remove('hidden');
         } else {
           adminNav.classList.add('hidden');
-          if (deleteProjBtn) deleteProjBtn.classList.add('hidden');
         }
       } else {
         overlay.classList.remove('hidden');
@@ -852,22 +820,35 @@
       }
     }
 
-    function handleLogin(e) {
-      if (e && e.preventDefault) e.preventDefault();
+    async function handleLogin(e) {
+      e.preventDefault();
       const u = document.getElementById('login-username').value.trim();
       const p = document.getElementById('login-password').value.trim();
       const errBox = document.getElementById('login-error');
 
       let matched = AppState.users.find(user => user.username === u && user.password === p);
 
+      if (!matched && supabase) {
+        try {
+          const { data } = await supabase.from('users').select('*').eq('username', u).eq('password', p).single();
+          if (data) {
+            matched = data;
+            if (!AppState.users.some(x => x.username === data.username)) {
+              AppState.users.push(data);
+              saveWorkspace();
+            }
+          }
+        } catch (err) {}
+      }
+
       if (matched) {
         sessionStorage.setItem(AUTH_SESSION_KEY, matched.username);
-        if (errBox) errBox.classList.add('hidden');
+        errBox.classList.add('hidden');
         checkAuth();
+        showToast(`Welcome back, ${matched.username}!`, 'success');
       } else {
-        if (errBox) errBox.classList.remove('hidden');
+        errBox.classList.remove('hidden');
       }
-      return false;
     }
 
     function handleLogout() {
@@ -877,7 +858,7 @@
     }
 
     // -------------------------------------------------------------
-    // PASSWORD PROTECTION (0107 PIN)
+    // PASSWORD VISIBILITY & PASSCODE (0107)
     // -------------------------------------------------------------
     function arePasswordsRevealed() {
       return sessionStorage.getItem(PASSWORDS_REVEALED_KEY) === 'true';
@@ -902,6 +883,7 @@
         closePasscodeModal();
         updatePasswordVisibilityUI();
         renderAdminUsers();
+        showToast('Password access authorized.', 'success');
       } else {
         document.getElementById('passcode-error').classList.remove('hidden');
       }
@@ -911,6 +893,7 @@
       sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
       updatePasswordVisibilityUI();
       renderAdminUsers();
+      showToast('Passwords masked.', 'info');
     }
 
     function updatePasswordVisibilityUI() {
@@ -926,14 +909,10 @@
     }
 
     // -------------------------------------------------------------
-    // ADMIN HUB / USER MANAGEMENT
+    // USER REGISTRATION & ADMIN MANAGEMENT
     // -------------------------------------------------------------
-    function handleCreateUser(e) {
+    async function handleCreateUser(e) {
       e.preventDefault();
-      if (!isCurrentUserAdmin()) {
-        alert("Only administrators can create users.");
-        return;
-      }
       const username = document.getElementById('new-user-username').value.trim();
       const password = document.getElementById('new-user-password').value.trim();
       const role = document.getElementById('new-user-role').value;
@@ -941,7 +920,7 @@
       if (!username || !password) return;
 
       if (AppState.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-        alert('A user with that username already exists.');
+        showToast('A user with that username already exists.', 'error');
         return;
       }
 
@@ -955,25 +934,36 @@
       AppState.users.push(newUser);
       saveWorkspace();
 
+      if (supabase) {
+        try {
+          await supabase.from('users').upsert({ username, password, role });
+        } catch (e) {
+          console.error("Supabase user sync error:", e);
+        }
+      }
+
       document.getElementById('new-user-username').value = '';
       document.getElementById('new-user-password').value = '';
       renderAdminUsers();
+      showToast(`User "${username}" created!`, 'success');
     }
 
     function deleteUser(username) {
-      if (!isCurrentUserAdmin()) {
-        alert("Only administrators can delete user accounts.");
-        return;
-      }
       if (username === 'atlantis8998') {
-        alert('Cannot delete the root administrator account.');
+        showToast('Cannot delete the root administrator account.', 'error');
         return;
       }
-      if (confirm(`Are you sure you want to delete login "${username}"?`)) {
+      confirmAction('Delete User Login', `Are you sure you want to delete login "${username}"?`, async () => {
         AppState.users = AppState.users.filter(u => u.username !== username);
         saveWorkspace();
+        if (supabase) {
+          try {
+            await supabase.from('users').delete().eq('username', username);
+          } catch(e) {}
+        }
         renderAdminUsers();
-      }
+        showToast(`User ${username} deleted.`, 'info');
+      });
     }
 
     function renderAdminUsers() {
@@ -1017,10 +1007,9 @@
     }
 
     // -------------------------------------------------------------
-    // NAVIGATION & PROJECTS
+    // NAVIGATION & VIEW SWITCHING
     // -------------------------------------------------------------
     function switchTab(tabId) {
-      closeTaskDetailView();
       ['tasks', 'dashboard', 'settings', 'admin'].forEach(id => {
         const view = document.getElementById(`view-${id}`);
         if (view) view.classList.add('hidden');
@@ -1082,15 +1071,6 @@
 
       const colorLabel = document.getElementById('setting-color-label');
       if (colorLabel) colorLabel.innerText = (project.color || '#ffbe0b').toUpperCase();
-
-      const deleteBtn = document.getElementById('btn-delete-project');
-      if (deleteBtn) {
-        if (isCurrentUserAdmin()) {
-          deleteBtn.classList.remove('hidden');
-        } else {
-          deleteBtn.classList.add('hidden');
-        }
-      }
     }
 
     function renderProjectsSidebar() {
@@ -1116,7 +1096,7 @@
       document.getElementById('modal-create-project').classList.add('hidden');
     }
 
-    function handleCreateProjectSubmit(e) {
+    async function handleCreateProjectSubmit(e) {
       e.preventDefault();
       const name = document.getElementById('new-project-name').value.trim();
       const duration = document.getElementById('new-project-duration').value;
@@ -1137,11 +1117,25 @@
       AppState.activeProjectId = newProj.id;
       saveWorkspace();
 
+      if (supabase) {
+        try {
+          await supabase.from('projects').upsert({
+            id: newProj.id,
+            name: newProj.name,
+            sprint_duration: newProj.sprintDuration,
+            description: newProj.description,
+            color: newProj.color,
+            sprints: newProj.sprints
+          });
+        } catch (err) {}
+      }
+
       closeCreateProjectModal();
       syncProjectHeader();
       renderProjectsSidebar();
       renderTasksFeed();
       renderDashboardMetrics();
+      showToast(`Project "${name}" created!`, 'success');
     }
 
     // -------------------------------------------------------------
@@ -1226,16 +1220,16 @@
       const pointsNum = task.points.split(' ')[0];
 
       return `
-        <div onclick="openTaskDetailView('${task.id}')" class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] rounded-xl px-4 py-2.5 flex items-center justify-between gap-4 transition group cursor-pointer">
+        <div class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] rounded-xl px-4 py-2.5 flex items-center justify-between gap-4 transition group">
           <div class="flex items-center gap-3">
-            <button onclick="event.stopPropagation(); cycleTaskStatus('${task.id}')" title="Cycle Status" class="text-xs ${statusIcon.color} cursor-pointer">${statusIcon.icon}</button>
+            <button onclick="cycleTaskStatus('${task.id}')" title="Cycle Status" class="text-xs ${statusIcon.color} cursor-pointer">${statusIcon.icon}</button>
             <span class="text-[10px] font-mono border border-[#2b2e38] bg-[#1a1b22] px-1.5 py-0.5 rounded text-zinc-400">${pointsNum === 'No' ? '0' : pointsNum}</span>
-            <span class="text-xs font-medium text-white group-hover:text-amber-400 transition">${escapeHtml(task.title)}</span>
+            <span class="text-xs font-medium text-white">${escapeHtml(task.title)}</span>
           </div>
 
-          <div class="flex items-center gap-3" onclick="event.stopPropagation()">
+          <div class="flex items-center gap-3">
             <span class="text-[11px] px-2 py-0.5 rounded bg-[#181920] border border-[#252732] text-zinc-300">⊞ ${task.type}</span>
-            <span class="text-[11px] text-zinc-400 cursor-pointer hover:text-white" onclick="openTaskDetailView('${task.id}')">👤 ${escapeHtml(task.assignee)}</span>
+            <span class="text-[11px] text-zinc-400">👤 ${escapeHtml(task.assignee)}</span>
             ${task.sprint !== 'No Sprint' ? `<span class="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.5 rounded">◯ ${escapeHtml(task.sprint.split(' ')[0])}</span>` : ''}
             <button onclick="deleteTask('${task.id}')" title="Delete Task" class="text-zinc-600 hover:text-rose-400 text-xs ml-1 cursor-pointer">✕</button>
           </div>
@@ -1253,7 +1247,7 @@
       }
     }
 
-    function cycleTaskStatus(taskId) {
+    async function cycleTaskStatus(taskId) {
       const task = AppState.tasks.find(t => t.id === taskId);
       if (!task) return;
       const order = ['Backlog', 'To Do', 'In Progress', 'In Review', 'Done'];
@@ -1262,13 +1256,26 @@
       saveWorkspace();
       renderTasksFeed();
       renderDashboardMetrics();
+
+      if (supabase) {
+        try {
+          await supabase.from('tasks').update({ status: task.status }).eq('id', taskId);
+        } catch (err) {}
+      }
     }
 
-    function deleteTask(taskId) {
+    async function deleteTask(taskId) {
       AppState.tasks = AppState.tasks.filter(t => t.id !== taskId);
       saveWorkspace();
       renderTasksFeed();
       renderDashboardMetrics();
+
+      if (supabase) {
+        try {
+          await supabase.from('tasks').delete().eq('id', taskId);
+        } catch (err) {}
+      }
+      showToast('Task deleted.', 'info');
     }
 
     function getGroupBuckets(mode) {
@@ -1328,222 +1335,6 @@
       return [];
     }
 
-    // -------------------------------------------------------------
-    // TASK DETAIL PANE
-    // -------------------------------------------------------------
-    function openTaskDetailView(taskId) {
-      activeDetailTaskId = taskId;
-      const task = AppState.tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      const project = getCurrentProject();
-      document.getElementById('view-tasks').classList.add('hidden');
-      document.getElementById('view-task-detail').classList.remove('hidden');
-
-      document.getElementById('detail-project-name').innerText = project.name;
-      document.getElementById('detail-breadcrumb-title').innerText = task.title;
-      document.getElementById('detail-title-input').value = task.title;
-      document.getElementById('detail-desc-input').value = task.description || '';
-
-      syncDetailSidebarUI(task);
-      renderDetailAssigneeOptions();
-      renderDetailSprintOptions();
-      renderDetailActivity(task);
-    }
-
-    function closeTaskDetailView() {
-      activeDetailTaskId = null;
-      document.getElementById('view-task-detail').classList.add('hidden');
-      document.getElementById('view-tasks').classList.remove('hidden');
-      renderTasksFeed();
-      renderDashboardMetrics();
-    }
-
-    function syncDetailSidebarUI(task) {
-      document.getElementById('detail-label-status').innerText = task.status;
-      const sIcon = getStatusIcon(task.status);
-      document.getElementById('detail-icon-status').className = sIcon.color;
-      document.getElementById('detail-icon-status').innerText = sIcon.icon;
-
-      document.getElementById('detail-label-assignee').innerText = task.assignee || 'Unassigned';
-      document.getElementById('detail-label-points').innerText = task.points || '1 Point';
-      document.getElementById('detail-label-type').innerText = task.type || 'Task';
-      document.getElementById('detail-label-sprint').innerText = task.sprint || 'No Sprint';
-      document.getElementById('detail-label-priority').innerText = task.priority || 'None';
-
-      const lockIcon = document.getElementById('assignee-lock-icon');
-      const btnAssignee = document.getElementById('btn-detail-assignee');
-      if (isCurrentUserAdmin()) {
-        if (lockIcon) lockIcon.classList.add('hidden');
-        if (btnAssignee) btnAssignee.classList.add('cursor-pointer');
-      } else {
-        if (lockIcon) lockIcon.classList.remove('hidden');
-        if (btnAssignee) btnAssignee.classList.remove('cursor-pointer');
-      }
-    }
-
-    function toggleDetailDropdown(type) {
-      // Admin-only restriction for Assignee dropdown
-      if (type === 'assignee' && !isCurrentUserAdmin()) {
-        alert("Only administrators can assign or reassign tasks.");
-        return;
-      }
-
-      const pop = document.getElementById(`pop-detail-${type}`);
-      const isHidden = pop.classList.contains('hidden');
-      closeAllDetailPopups();
-      if (isHidden) pop.classList.remove('hidden');
-    }
-
-    function closeAllDetailPopups() {
-      ['status', 'assignee', 'points', 'type', 'sprint', 'priority'].forEach(k => {
-        const p = document.getElementById(`pop-detail-${k}`);
-        if (p) p.classList.add('hidden');
-      });
-    }
-
-    function setDetailTaskAttr(attr, value) {
-      if (!activeDetailTaskId) return;
-
-      // Admin-only check
-      if (attr === 'assignee' && !isCurrentUserAdmin()) {
-        alert("Only administrators can assign tasks.");
-        return;
-      }
-
-      const task = AppState.tasks.find(t => t.id === activeDetailTaskId);
-      if (!task) return;
-
-      const activeUser = getActiveSession() || 'Admin';
-      task[attr] = value;
-
-      if (!task.activity) task.activity = [];
-      task.activity.unshift({
-        author: activeUser,
-        action: `Changed ${attr} to "${value}"`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-
-      saveWorkspace();
-      syncDetailSidebarUI(task);
-      closeAllDetailPopups();
-      renderDetailActivity(task);
-      renderTasksFeed();
-    }
-
-    function renderDetailAssigneeOptions() {
-      const pop = document.getElementById('pop-detail-assignee');
-      if (!isCurrentUserAdmin()) {
-        pop.innerHTML = `<div class="p-2 text-[11px] text-zinc-500 text-center">Only administrators can assign tasks.</div>`;
-        return;
-      }
-      let html = `
-        <button onclick="setDetailTaskAttr('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">
-          <span>✕</span> Unassigned
-        </button>
-      `;
-      AppState.users.forEach(u => {
-        html += `
-          <button onclick="setDetailTaskAttr('assignee', '${escapeHtml(u.username)}')" class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">
-            <div class="flex items-center gap-2">
-              <span class="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold">${u.username[0]?.toUpperCase()}</span>
-              <span>${escapeHtml(u.username)}</span>
-            </div>
-            <span class="text-[10px] text-zinc-500">${u.role}</span>
-          </button>
-        `;
-      });
-      pop.innerHTML = html;
-    }
-
-    function renderDetailSprintOptions() {
-      const proj = getCurrentProject();
-      const pop = document.getElementById('pop-detail-sprint');
-      let html = `<button onclick="setDetailTaskAttr('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✕ No Sprint</button>`;
-      proj.sprints.forEach(sp => {
-        html += `<button onclick="setDetailTaskAttr('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-300 hover:bg-[#20222a] rounded cursor-pointer">◯ ${escapeHtml(sp.name)}</button>`;
-      });
-      pop.innerHTML = html;
-    }
-
-    function updateDetailTitle(val) {
-      if (!activeDetailTaskId || !val.trim()) return;
-      const task = AppState.tasks.find(t => t.id === activeDetailTaskId);
-      if (!task) return;
-      task.title = val.trim();
-      document.getElementById('detail-breadcrumb-title').innerText = task.title;
-      saveWorkspace();
-    }
-
-    function updateDetailDesc(val) {
-      if (!activeDetailTaskId) return;
-      const task = AppState.tasks.find(t => t.id === activeDetailTaskId);
-      if (!task) return;
-      task.description = val.trim();
-      saveWorkspace();
-    }
-
-    function renderDetailActivity(task) {
-      const container = document.getElementById('detail-activity-timeline');
-      if (!task.activity || task.activity.length === 0) {
-        task.activity = [
-          {
-            author: task.createdBy || getActiveSession() || 'Dev',
-            action: 'Created the task',
-            time: task.createdAtTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }
-        ];
-      }
-
-      container.innerHTML = task.activity.map(act => `
-        <div class="flex items-start gap-3.5 relative">
-          <div class="w-6 h-6 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-            ${act.author[0]?.toUpperCase() || 'U'}
-          </div>
-          <div class="space-y-0.5">
-            <div class="text-xs text-zinc-400 flex items-center gap-2">
-              <span class="text-zinc-500 font-mono text-[11px]">${act.time}</span>
-            </div>
-            <div class="text-xs font-semibold text-white">${escapeHtml(act.action)}</div>
-            <div class="text-[11px] text-zinc-500 flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-600/70 inline-block"></span>
-              <span>${escapeHtml(act.author)}</span>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function submitDetailComment() {
-      if (!activeDetailTaskId) return;
-      const box = document.getElementById('detail-comment-input');
-      const text = box.value.trim();
-      if (!text) return;
-
-      const task = AppState.tasks.find(t => t.id === activeDetailTaskId);
-      if (!task) return;
-
-      const activeUser = getActiveSession() || 'Dev';
-      if (!task.activity) task.activity = [];
-      task.activity.unshift({
-        author: activeUser,
-        action: `Commented: "${text}"`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      });
-
-      saveWorkspace();
-      box.value = '';
-      renderDetailActivity(task);
-    }
-
-    function copyCurrentTaskLink() {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Task link copied to clipboard!');
-    }
-
-    // -------------------------------------------------------------
-    // MODAL TASK CREATION
-    // -------------------------------------------------------------
     function openCreateTaskModal(field, val) {
       document.getElementById('modal-create-task').classList.remove('hidden');
       document.getElementById('new-task-title').focus();
@@ -1558,12 +1349,7 @@
       };
 
       if (field && val) {
-        if (field === 'assignee' && !isCurrentUserAdmin()) {
-          // Prevent non-admin preset
-          draftTask.assignee = 'Unassigned';
-        } else {
-          draftTask[field] = val;
-        }
+        draftTask[field] = val;
       }
 
       document.getElementById('label-modal-status').innerText = draftTask.status;
@@ -1592,10 +1378,6 @@
     }
 
     function toggleModalMenu(attribute) {
-      if (attribute === 'assignee' && !isCurrentUserAdmin()) {
-        alert("Only administrators can assign tasks upon creation.");
-        return;
-      }
       const menu = document.getElementById(`pop-modal-${attribute}`);
       const isHidden = menu.classList.contains('hidden');
       closeAllPopups();
@@ -1603,10 +1385,6 @@
     }
 
     function selectModalAttribute(attr, val) {
-      if (attr === 'assignee' && !isCurrentUserAdmin()) {
-        alert("Only administrators can assign tasks.");
-        return;
-      }
       draftTask[attr] = val;
       document.getElementById(`label-modal-${attr}`).innerText = val;
       closeAllPopups();
@@ -1624,10 +1402,6 @@
 
     function renderModalAssigneeOptions() {
       const pop = document.getElementById('pop-modal-assignee');
-      if (!isCurrentUserAdmin()) {
-        pop.innerHTML = `<div class="p-2 text-[11px] text-zinc-500 text-center">Admin only</div>`;
-        return;
-      }
       let html = `<button type="button" onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ Unassigned</button>`;
       AppState.users.forEach(u => {
         html += `
@@ -1640,28 +1414,16 @@
       pop.innerHTML = html;
     }
 
-    function submitNewTask() {
+    async function submitNewTask() {
       const title = document.getElementById('new-task-title').value.trim();
       if (!title) return;
-
-      const activeUser = getActiveSession() || 'Dev';
-      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-      // Non-admins cannot set assignee on creation
-      const assignedTarget = isCurrentUserAdmin() ? draftTask.assignee : 'Unassigned';
 
       const newTask = {
         id: 'task-' + Date.now(),
         projectId: AppState.activeProjectId,
         title: title,
         description: document.getElementById('new-task-desc').value.trim(),
-        createdBy: activeUser,
-        createdAtTime: timeStr,
-        activity: [
-          { author: activeUser, action: 'Created the task', time: timeStr }
-        ],
-        ...draftTask,
-        assignee: assignedTarget
+        ...draftTask
       };
 
       AppState.tasks.unshift(newTask);
@@ -1669,6 +1431,28 @@
       closeCreateTaskModal();
       renderTasksFeed();
       renderDashboardMetrics();
+
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('tasks').upsert({
+            id: newTask.id,
+            project_id: newTask.projectId,
+            title: newTask.title,
+            description: newTask.description,
+            status: newTask.status,
+            points: newTask.points,
+            priority: newTask.priority,
+            type: newTask.type,
+            assignee: newTask.assignee,
+            sprint: newTask.sprint
+          });
+          if (error) console.error("Supabase task sync error:", error);
+        } catch (err) {
+          console.error("Failed to sync task to Supabase:", err);
+        }
+      }
+
+      showToast(`Task "${title}" created!`, 'success');
     }
 
     function renderDashboardMetrics() {
@@ -1714,83 +1498,134 @@
       }
     }
 
-    function promptCreateSprint() {
+    // -------------------------------------------------------------
+    // SPRINT CREATION
+    // -------------------------------------------------------------
+    function openCreateSprintModal() {
       const proj = getCurrentProject();
       const count = proj.sprints.length + 1;
       const cadence = proj.sprintDuration || '2 Weeks';
-      const name = prompt(`Enter name for Sprint ${count} (Cadence: ${cadence}):`, `Sprint ${count} [${cadence} Check-in]`);
-      if (name && name.trim()) {
+      document.getElementById('new-sprint-name').value = `Sprint ${count} [${cadence} Check-in]`;
+      document.getElementById('modal-create-sprint').classList.remove('hidden');
+    }
+
+    function closeCreateSprintModal() {
+      document.getElementById('modal-create-sprint').classList.add('hidden');
+    }
+
+    async function handleCreateSprintSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-sprint-name').value.trim();
+      const proj = getCurrentProject();
+      const cadence = proj.sprintDuration || '2 Weeks';
+
+      if (name) {
         proj.sprints.push({ 
           id: 'sp-' + Date.now(), 
-          name: name.trim(), 
+          name: name, 
           duration: cadence
         });
         saveWorkspace();
+
+        if (supabase) {
+          try {
+            await supabase.from('projects').update({ sprints: proj.sprints }).eq('id', proj.id);
+          } catch(err) {}
+        }
+
         renderDashboardMetrics();
+        closeCreateSprintModal();
+        showToast('Sprint cycle added!', 'success');
       }
     }
 
-    function updateProjectName(val) {
+    // -------------------------------------------------------------
+    // PROJECT SETTINGS
+    // -------------------------------------------------------------
+    async function updateProjectName(val) {
       if (!val.trim()) return;
       const proj = getCurrentProject();
       proj.name = val.trim();
       saveWorkspace();
       syncProjectHeader();
       renderProjectsSidebar();
+
+      if (supabase) {
+        try {
+          await supabase.from('projects').update({ name: proj.name }).eq('id', proj.id);
+        } catch(err) {}
+      }
     }
 
-    function updateProjectDuration(val) {
+    async function updateProjectDuration(val) {
       const proj = getCurrentProject();
       proj.sprintDuration = val;
       saveWorkspace();
       syncProjectHeader();
       renderDashboardMetrics();
+
+      if (supabase) {
+        try {
+          await supabase.from('projects').update({ sprint_duration: proj.sprintDuration }).eq('id', proj.id);
+        } catch(err) {}
+      }
     }
 
-    function updateProjectDesc(val) {
+    async function updateProjectDesc(val) {
       const proj = getCurrentProject();
       proj.description = val.trim();
       saveWorkspace();
+
+      if (supabase) {
+        try {
+          await supabase.from('projects').update({ description: proj.description }).eq('id', proj.id);
+        } catch(err) {}
+      }
     }
 
-    function updateProjectColor(val) {
+    async function updateProjectColor(val) {
       const proj = getCurrentProject();
       proj.color = val;
       document.getElementById('setting-color-label').innerText = val.toUpperCase();
       saveWorkspace();
       renderProjectsSidebar();
+
+      if (supabase) {
+        try {
+          await supabase.from('projects').update({ color: proj.color }).eq('id', proj.id);
+        } catch(err) {}
+      }
     }
 
-    // ADMIN ONLY PROJECT DELETION
-    function deleteCurrentProject() {
-      if (!isCurrentUserAdmin()) {
-        alert("Permission denied. Only administrators can delete projects.");
-        return;
-      }
+    async function deleteCurrentProject() {
       if (AppState.projects.length <= 1) {
-        alert('You must have at least one project.');
+        showToast('You must have at least one project.', 'error');
         return;
       }
       const proj = getCurrentProject();
-      if (confirm(`Are you sure you want to delete "${proj.name}"?`)) {
-        AppState.tasks = AppState.tasks.filter(t => t.projectId !== AppState.activeProjectId);
-        AppState.projects = AppState.projects.filter(p => p.id !== AppState.activeProjectId);
-        AppState.activeProjectId = AppState.projects[0].id;
-        saveWorkspace();
-        syncProjectHeader();
-        renderProjectsSidebar();
-        renderTasksFeed();
-        renderDashboardMetrics();
+      AppState.tasks = AppState.tasks.filter(t => t.projectId !== AppState.activeProjectId);
+      AppState.projects = AppState.projects.filter(p => p.id !== AppState.activeProjectId);
+      AppState.activeProjectId = AppState.projects[0].id;
+      saveWorkspace();
+
+      if (supabase) {
+        try {
+          await supabase.from('projects').delete().eq('id', proj.id);
+        } catch(e) {}
       }
+
+      syncProjectHeader();
+      renderProjectsSidebar();
+      renderTasksFeed();
+      renderDashboardMetrics();
+      showToast('Project deleted.', 'info');
     }
 
     function clearAllData() {
-      if (confirm('Clear browser cache and reload? This will reset all workspace data.')) {
-        localStorage.removeItem(STORAGE_KEY);
-        sessionStorage.removeItem(AUTH_SESSION_KEY);
-        sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
-        location.reload();
-      }
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
+      location.reload();
     }
 
     function escapeHtml(str) {
