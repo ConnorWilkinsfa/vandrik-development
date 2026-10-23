@@ -169,6 +169,7 @@
         <div class="flex items-center gap-2 text-xs">
           <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
           <span class="text-zinc-400 font-medium" id="current-project-label">Development</span>
+          <span id="current-project-staff-pill" class="hidden text-[10px] text-indigo-400 bg-indigo-950/60 border border-indigo-700/50 px-1.5 py-0.5 rounded font-bold">🔒 STAFF</span>
           <span class="text-zinc-600">›</span>
           <span class="bg-[#1c1d22] text-zinc-200 px-2 py-0.5 rounded font-medium border border-[#272932]">Tasks</span>
           <span class="ml-2 text-[10px] text-zinc-500 bg-[#16171d] px-2 py-0.5 rounded border border-[#242631]" id="sprint-cycle-badge">2-Week Cycles</span>
@@ -304,7 +305,6 @@
           <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Danger Zone</div>
           <p class="text-xs text-zinc-500">Permanently delete this project or purge local cache.</p>
           <div class="flex gap-3">
-            <!-- Delete Project is rendered conditionally for Admins -->
             <button id="btn-delete-project-settings" onclick="deleteCurrentProject()" class="hidden px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
               Delete Project
             </button>
@@ -505,7 +505,7 @@
     </div>
   </div>
 
-  <!-- ======================== MODAL: CREATE PROJECT ======================== -->
+  <!-- ======================== MODAL: CREATE PROJECT (WITH ADMIN-ONLY STAFF OPTION) ======================== -->
   <div id="modal-create-project" class="hidden fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-[#141518] border border-[#262832] w-full max-w-md rounded-2xl p-7 shadow-2xl space-y-5 relative">
       <button onclick="closeCreateProjectModal()" class="absolute top-5 right-5 text-zinc-500 hover:text-zinc-200 text-sm cursor-pointer">✕</button>
@@ -527,6 +527,20 @@
             <option value="3 Weeks">3 Weeks</option>
             <option value="4 Weeks">4 Weeks</option>
           </select>
+        </div>
+
+        <!-- Staff Project Option (Rendered dynamically for Admins only) -->
+        <div id="staff-project-toggle-container" class="hidden bg-[#151622] border border-[#292c44] rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="space-y-0.5">
+              <div class="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                <span>🔒 Staff Project</span>
+                <span class="text-[9px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.2 rounded border border-indigo-500/30">ADMINS ONLY</span>
+              </div>
+              <div class="text-[11px] text-zinc-400">Restricted workspace. Only admins can see and interact with this project and its tasks.</div>
+            </div>
+            <input type="checkbox" id="new-project-is-staff" class="w-4 h-4 accent-indigo-500 rounded cursor-pointer" />
+          </div>
         </div>
 
         <button type="submit" class="w-full py-3 bg-[#44464f] hover:bg-[#52545f] text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
@@ -614,7 +628,7 @@
           </div>
         </div>
 
-        <!-- Assignee -->
+        <!-- Assignee (Admin Only Assign Control) -->
         <div class="relative">
           <button type="button" onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
             <span class="text-zinc-400">👤</span>
@@ -682,6 +696,7 @@
           sprintDuration: '2 Weeks',
           description: 'Core platform engineering workspace.',
           color: '#ffbe0b',
+          isStaff: false,
           sprints: [
             { id: 'sp-1', name: 'Cycle 1 (Initial Setup)', duration: '2 Weeks' }
           ]
@@ -702,13 +717,13 @@
       sprint: 'No Sprint'
     };
 
-    // Role helper
+    // Helper: Determine if logged-in session is an Admin
     function isCurrentUserAdmin() {
       const activeUser = sessionStorage.getItem(AUTH_SESSION_KEY);
       if (!activeUser) return false;
       if (activeUser === 'atlantis8998') return true;
       const user = AppState.users.find(u => u.username === activeUser);
-      return user && user.role === 'Admin';
+      return user && (user.role === 'Admin' || user.role === 'Administrator');
     }
 
     async function loadWorkspaceFromCloudOrLocal() {
@@ -730,6 +745,7 @@
               sprintDuration: p.sprint_duration,
               description: p.description,
               color: p.color,
+              isStaff: !!p.is_staff,
               sprints: p.sprints || []
             }));
           }
@@ -771,10 +787,7 @@
     window.addEventListener('DOMContentLoaded', async () => {
       await loadWorkspaceFromCloudOrLocal();
       checkAuth();
-
-      if (!AppState.projects.some(p => p.id === AppState.activeProjectId)) {
-        AppState.activeProjectId = AppState.projects[0]?.id || 'proj-1';
-      }
+      validateActiveProjectAccess();
 
       renderProjectsSidebar();
       syncProjectHeader();
@@ -859,7 +872,11 @@
         sessionStorage.setItem(AUTH_SESSION_KEY, matched.username);
         if (errBox) errBox.classList.add('hidden');
         checkAuth();
+        validateActiveProjectAccess();
+        renderProjectsSidebar();
+        syncProjectHeader();
         renderTasksFeed();
+        renderDashboardMetrics();
       } else {
         if (errBox) errBox.classList.remove('hidden');
       }
@@ -872,13 +889,29 @@
       location.reload();
     }
 
+    // Ensure non-admins are never left viewing a Staff Project
+    function validateActiveProjectAccess() {
+      const current = getCurrentProject();
+      if (!isCurrentUserAdmin() && current && current.isStaff) {
+        const fallback = getVisibleProjects()[0] || AppState.projects[0];
+        AppState.activeProjectId = fallback ? fallback.id : 'proj-1';
+        saveWorkspace();
+      }
+    }
+
+    function getVisibleProjects() {
+      const isAdmin = isCurrentUserAdmin();
+      return AppState.projects.filter(p => isAdmin || !p.isStaff);
+    }
+
     // -------------------------------------------------------------
-    // TASK DETAIL VIEW & EDITING
+    // TASK DETAIL VIEW & EDITING (ADMIN-ONLY ASSIGNMENT LOCK)
     // -------------------------------------------------------------
     function openTaskDetailModal(taskId) {
       const task = AppState.tasks.find(t => t.id === taskId);
       if (!task) return;
       activeTaskDetailId = taskId;
+      const isAdmin = isCurrentUserAdmin();
 
       const proj = getCurrentProject();
       document.getElementById('detail-project-name').innerText = proj.name;
@@ -897,6 +930,17 @@
       });
       assigneeSelect.innerHTML = assigneeOptions;
 
+      // Restrict assignment dropdown in detail view to Admins only
+      if (!isAdmin) {
+        assigneeSelect.disabled = true;
+        assigneeSelect.classList.add('opacity-50', 'cursor-not-allowed');
+        assigneeSelect.title = "Only workspace administrators can assign tasks.";
+      } else {
+        assigneeSelect.disabled = false;
+        assigneeSelect.classList.remove('opacity-50', 'cursor-not-allowed');
+        assigneeSelect.title = "";
+      }
+
       // Populate sprints
       const sprintSelect = document.getElementById('detail-task-sprint');
       let sprintOptions = `<option value="No Sprint">No Sprint</option>`;
@@ -907,16 +951,16 @@
       }
       sprintSelect.innerHTML = sprintOptions;
 
-      // Restrict delete in modal to Admins
+      // Restrict deletion in modal to Admins only
       const deleteZone = document.getElementById('detail-admin-delete-zone');
-      if (isCurrentUserAdmin()) {
+      if (isAdmin) {
         deleteZone.innerHTML = `
           <button onclick="deleteTaskFromDetail('${task.id}')" class="px-3.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 text-xs font-semibold rounded-lg transition cursor-pointer">
             Delete Task
           </button>
         `;
       } else {
-        deleteZone.innerHTML = `<span class="text-[11px] text-zinc-600 italic">Delete permissions restricted to Admins</span>`;
+        deleteZone.innerHTML = `<span class="text-[11px] text-zinc-600 italic">Admin permissions required for deletion</span>`;
       }
 
       document.getElementById('modal-task-detail').classList.remove('hidden');
@@ -929,6 +973,12 @@
 
     async function updateActiveTaskField(field, value) {
       if (!activeTaskDetailId) return;
+      
+      if (field === 'assignee' && !isCurrentUserAdmin()) {
+        alert("Action Denied: Only administrators have permission to assign tasks.");
+        return;
+      }
+
       const task = AppState.tasks.find(t => t.id === activeTaskDetailId);
       if (!task) return;
 
@@ -940,15 +990,7 @@
       if (supabaseClient) {
         try {
           const updatePayload = {};
-          if (field === 'description') updatePayload.description = value;
-          else if (field === 'title') updatePayload.title = value;
-          else if (field === 'status') updatePayload.status = value;
-          else if (field === 'priority') updatePayload.priority = value;
-          else if (field === 'points') updatePayload.points = value;
-          else if (field === 'type') updatePayload.type = value;
-          else if (field === 'assignee') updatePayload.assignee = value;
-          else if (field === 'sprint') updatePayload.sprint = value;
-
+          updatePayload[field] = value;
           await supabaseClient.from('tasks').update(updatePayload).eq('id', activeTaskDetailId);
         } catch(e) {
           console.error("Failed to update task field in Supabase:", e);
@@ -958,7 +1000,7 @@
 
     async function deleteTaskFromDetail(taskId) {
       if (!isCurrentUserAdmin()) {
-        alert("Only workspace administrators can delete tasks.");
+        alert("Action Denied: Only workspace administrators can delete tasks.");
         return;
       }
       closeTaskDetailModal();
@@ -970,6 +1012,19 @@
     // -------------------------------------------------------------
     function renderTasksFeed() {
       const container = document.getElementById('tasks-container');
+      const activeProj = getCurrentProject();
+
+      // Guard: Non-admins cannot see tasks from a staff project
+      if (!isCurrentUserAdmin() && activeProj && activeProj.isStaff) {
+        container.innerHTML = `
+          <div class="border border-indigo-900/40 bg-[#12131b] rounded-xl p-8 text-center space-y-2 max-w-xl mx-auto my-12">
+            <div class="text-sm font-bold text-indigo-400">🔒 Restricted Project</div>
+            <p class="text-xs text-zinc-500">This workspace is accessible exclusively to administrators.</p>
+          </div>
+        `;
+        return;
+      }
+
       let filtered = AppState.tasks.filter(t => t.projectId === AppState.activeProjectId);
 
       if (searchQuery) {
@@ -1034,7 +1089,6 @@
             <span class="text-[11px] text-zinc-400">👤 ${escapeHtml(task.assignee || 'Unassigned')}</span>
             ${task.sprint && task.sprint !== 'No Sprint' ? `<span class="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.5 rounded">◯ ${escapeHtml(task.sprint.split(' ')[0])}</span>` : ''}
             
-            <!-- Only Admins receive the delete button -->
             ${isAdmin ? `
               <button onclick="event.stopPropagation(); deleteTask('${task.id}')" title="Delete Task (Admin Only)" class="text-zinc-600 hover:text-rose-400 text-xs ml-1 cursor-pointer">✕</button>
             ` : ''}
@@ -1114,6 +1168,7 @@
           } catch(e) {}
         }
 
+        validateActiveProjectAccess();
         syncProjectHeader();
         renderProjectsSidebar();
         renderTasksFeed();
@@ -1296,10 +1351,17 @@
     }
 
     function getCurrentProject() {
-      return AppState.projects.find(p => p.id === AppState.activeProjectId) || AppState.projects[0];
+      const visible = getVisibleProjects();
+      return visible.find(p => p.id === AppState.activeProjectId) || visible[0] || AppState.projects[0];
     }
 
     function selectProject(projId) {
+      const proj = AppState.projects.find(p => p.id === projId);
+      if (proj && proj.isStaff && !isCurrentUserAdmin()) {
+        alert("Access Denied: This staff project is restricted to administrators.");
+        return;
+      }
+
       AppState.activeProjectId = projId;
       saveWorkspace();
       syncProjectHeader();
@@ -1315,6 +1377,12 @@
       document.getElementById('modal-project-badge').innerText = project.name;
       document.getElementById('sprint-cycle-badge').innerText = `${project.sprintDuration || '2 Weeks'} Cycles`;
       
+      const staffPill = document.getElementById('current-project-staff-pill');
+      if (staffPill) {
+        if (project.isStaff) staffPill.classList.remove('hidden');
+        else staffPill.classList.add('hidden');
+      }
+
       const settingName = document.getElementById('setting-project-name');
       if (settingName) settingName.value = project.name;
 
@@ -1333,11 +1401,16 @@
 
     function renderProjectsSidebar() {
       const list = document.getElementById('project-list');
-      list.innerHTML = AppState.projects.map(proj => {
+      const visibleProjects = getVisibleProjects();
+
+      list.innerHTML = visibleProjects.map(proj => {
         const isSelected = proj.id === AppState.activeProjectId;
         return `
           <div onclick="selectProject('${proj.id}')" class="flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${isSelected ? 'bg-[#18191f] text-white' : 'text-zinc-400 hover:bg-[#141519] hover:text-zinc-200'}">
-            <span class="truncate">${escapeHtml(proj.name)}</span>
+            <div class="flex items-center gap-2 truncate">
+              <span class="truncate">${escapeHtml(proj.name)}</span>
+              ${proj.isStaff ? `<span class="text-[9px] text-indigo-400 bg-indigo-950/60 border border-indigo-700/50 px-1 py-0.2 rounded font-bold shrink-0">🔒 STAFF</span>` : ''}
+            </div>
             <span class="w-2 h-2 rounded-full shrink-0 ml-2" style="background-color: ${proj.color};"></span>
           </div>
         `;
@@ -1347,6 +1420,18 @@
     function openCreateProjectModal() {
       document.getElementById('modal-create-project').classList.remove('hidden');
       document.getElementById('new-project-name').value = '';
+      
+      // Control Staff Project option visibility
+      const staffToggleContainer = document.getElementById('staff-project-toggle-container');
+      const staffCheckbox = document.getElementById('new-project-is-staff');
+      if (isCurrentUserAdmin()) {
+        staffToggleContainer.classList.remove('hidden');
+        staffCheckbox.checked = false;
+      } else {
+        staffToggleContainer.classList.add('hidden');
+        staffCheckbox.checked = false;
+      }
+
       document.getElementById('new-project-name').focus();
     }
 
@@ -1358,14 +1443,21 @@
       if (e && e.preventDefault) e.preventDefault();
       const name = document.getElementById('new-project-name').value.trim();
       const duration = document.getElementById('new-project-duration').value;
+      const isStaffCheckbox = document.getElementById('new-project-is-staff');
+      const wantsStaff = isStaffCheckbox && isStaffCheckbox.checked;
+
       if (!name) return;
+
+      // Only Admins can set isStaff to true
+      const isStaff = isCurrentUserAdmin() && wantsStaff;
 
       const newProj = {
         id: 'proj-' + Date.now(),
         name: name,
         sprintDuration: duration,
-        description: '',
-        color: '#3b82f6',
+        description: isStaff ? 'Confidential administrator & staff project.' : '',
+        color: isStaff ? '#6366f1' : '#3b82f6',
+        isStaff: isStaff,
         sprints: [
           { id: 'sp-' + Date.now(), name: `Sprint 1 [${duration} Check-in]`, duration: duration }
         ]
@@ -1383,6 +1475,7 @@
             sprint_duration: newProj.sprintDuration,
             description: newProj.description,
             color: newProj.color,
+            is_staff: newProj.isStaff,
             sprints: newProj.sprints
           });
         } catch(e) {}
@@ -1497,7 +1590,11 @@
       };
 
       if (field && val) {
-        draftTask[field] = val;
+        if (field === 'assignee' && !isCurrentUserAdmin()) {
+          draftTask.assignee = 'Unassigned';
+        } else {
+          draftTask[field] = val;
+        }
       }
 
       document.getElementById('label-modal-status').innerText = draftTask.status;
@@ -1526,6 +1623,11 @@
     }
 
     function toggleModalMenu(attribute) {
+      if (attribute === 'assignee' && !isCurrentUserAdmin()) {
+        alert("Only workspace administrators can assign tasks.");
+        return;
+      }
+
       const menu = document.getElementById(`pop-modal-${attribute}`);
       const isHidden = menu.classList.contains('hidden');
       closeAllPopups();
@@ -1533,6 +1635,12 @@
     }
 
     function selectModalAttribute(attr, val) {
+      if (attr === 'assignee' && !isCurrentUserAdmin()) {
+        alert("Action Denied: Only administrators can assign tasks.");
+        closeAllPopups();
+        return;
+      }
+
       draftTask[attr] = val;
       document.getElementById(`label-modal-${attr}`).innerText = val;
       closeAllPopups();
@@ -1552,6 +1660,19 @@
 
     function renderModalAssigneeOptions() {
       const pop = document.getElementById('pop-modal-assignee');
+      const btn = document.getElementById('btn-modal-assignee');
+      const isAdmin = isCurrentUserAdmin();
+
+      if (!isAdmin) {
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.title = "Only workspace administrators can assign tasks";
+        pop.innerHTML = `<div class="p-2 text-[11px] text-zinc-500 italic text-center">Admin access required</div>`;
+        return;
+      }
+
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      btn.title = "";
+
       let html = `<button type="button" onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ Unassigned</button>`;
       AppState.users.forEach(u => {
         html += `
@@ -1567,6 +1688,10 @@
     async function submitNewTask() {
       const title = document.getElementById('new-task-title').value.trim();
       if (!title) return;
+
+      if (!isCurrentUserAdmin()) {
+        draftTask.assignee = 'Unassigned';
+      }
 
       const newTask = {
         id: 'task-' + Date.now(),
