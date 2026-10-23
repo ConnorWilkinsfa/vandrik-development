@@ -4,9 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vandrik Development - Project & Task Management</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS Client v2 -->
+  
+  <!-- Supabase JS Client CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -36,55 +39,127 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #26282d; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #373a42; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .animate-toast { animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   </style>
 </head>
 <body class="bg-[#0e0f12] text-zinc-200 font-sans antialiased flex h-screen overflow-hidden select-none">
 
-  <!-- ======================== LOGIN / AUTH OVERLAY ======================== -->
-  <div id="auth-overlay" class="fixed inset-0 bg-[#0c0d0e] z-[100] flex items-center justify-center p-4">
+  <!-- ======================== TOAST NOTIFICATION CONTAINER ======================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ======================== ON-SITE CONFIRM MODAL ======================== -->
+  <div id="modal-confirm" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-[90]">
+    <div class="bg-[#15161a] border border-[#2a2d36] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center gap-2.5 text-rose-400">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <h4 class="text-sm font-bold text-white" id="confirm-title">Confirm Action</h4>
+      </div>
+      <p class="text-xs text-zinc-400 leading-relaxed" id="confirm-message">Are you sure you want to proceed?</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeConfirmModal(false)" class="px-3.5 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg transition">Cancel</button>
+        <button id="btn-confirm-accept" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs rounded-lg transition shadow-sm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== ON-SITE SPRINT CREATION MODAL ======================== -->
+  <div id="modal-create-sprint" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-[80]">
+    <div class="bg-[#15161a] border border-[#2a2d36] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-cyan-400">◯</span>
+          <h3 class="text-sm font-bold text-white">Create Sprint Milestone</h3>
+        </div>
+        <button onclick="closeSprintModal()" class="text-zinc-500 hover:text-zinc-300 text-xs">✕</button>
+      </div>
+      <p class="text-xs text-zinc-400" id="sprint-modal-desc">Add a scheduled sprint:</p>
+      <div class="space-y-3">
+        <div>
+          <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Sprint Title</label>
+          <input type="text" id="sprint-input-name" placeholder="e.g. Cycle 1 [Core Features]" class="w-full bg-[#101114] border border-[#282b35] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"/>
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Duration Cycle</label>
+          <select id="sprint-input-duration" class="w-full bg-[#101114] border border-[#282b35] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none">
+            <option value="1 Week">1 Week Sprint</option>
+            <option value="2 Weeks" selected>2 Weeks Sprint</option>
+            <option value="3 Weeks">3 Weeks Sprint</option>
+            <option value="4 Weeks">4 Weeks Sprint</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-[#22242c]">
+        <button onclick="closeSprintModal()" class="px-3.5 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg">Cancel</button>
+        <button onclick="submitSprintCreation()" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs rounded-lg transition shadow-sm">+ Add Sprint</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== ON-SITE PROJECT CREATION MODAL ======================== -->
+  <div id="modal-create-project" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-[80]">
+    <div class="bg-[#15161a] border border-[#2a2d36] w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Create New Project</h3>
+        <button onclick="closeProjectModal()" class="text-zinc-500 hover:text-zinc-300 text-xs">✕</button>
+      </div>
+      <p class="text-[11px] text-zinc-400">You will be designated the Lead Developer with exclusive project control.</p>
+      <div class="space-y-3">
+        <div>
+          <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Project Name</label>
+          <input type="text" id="project-input-name" placeholder="e.g. Infrastructure Modernization" class="w-full bg-[#101114] border border-[#282b35] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"/>
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Sprint Check-in Duration</label>
+          <select id="project-input-duration" class="w-full bg-[#101114] border border-[#282b35] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none">
+            <option value="1 Week">1 Week</option>
+            <option value="2 Weeks" selected>2 Weeks</option>
+            <option value="3 Weeks">3 Weeks</option>
+            <option value="4 Weeks">4 Weeks</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold text-zinc-400 block mb-1">Theme Accent Color</label>
+          <div class="flex items-center gap-3 bg-[#101114] border border-[#282b35] rounded-lg px-3 py-1.5">
+            <input type="color" id="project-input-color" value="#3b82f6" class="w-6 h-6 rounded border-0 bg-transparent cursor-pointer"/>
+            <span class="text-xs text-zinc-400">Select badge indicator</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-[#22242c]">
+        <button onclick="closeProjectModal()" class="px-3.5 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg">Cancel</button>
+        <button onclick="submitProjectCreation()" class="px-4 py-1.5 bg-white text-black hover:bg-zinc-200 font-semibold text-xs rounded-lg transition shadow-sm">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== AUTHENTICATION OVERLAY ======================== -->
+  <div id="auth-overlay" class="fixed inset-0 bg-[#0c0d0e] z-[110] flex items-center justify-center p-4">
     <div class="bg-[#141519] border border-[#24262f] w-full max-w-sm rounded-2xl p-7 shadow-2xl space-y-6">
       <div class="text-center space-y-2">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-amber-400 flex items-center justify-center shadow-lg mx-auto">
-          <span class="text-sm font-black text-white tracking-tighter">V</span>
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-amber-400 flex items-center justify-center shadow-lg mx-auto">
+          <span class="text-base font-black text-white tracking-tighter">V</span>
         </div>
         <h1 class="text-lg font-bold text-white tracking-tight">Vandrik Development</h1>
-        <p class="text-xs text-zinc-500">Sign in to your development workspace</p>
+        <p class="text-xs text-zinc-500">Sign in to your team workspace</p>
       </div>
 
-      <form id="login-form" onsubmit="event.preventDefault(); handleLogin(event);" class="space-y-4">
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
         <div class="space-y-1.5">
           <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Username</label>
-          <input 
-            type="text" 
-            id="login-username" 
-            required 
-            placeholder="Username"
-            autocomplete="username"
-            class="w-full bg-[#101114] border border-[#24262f] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"
-          />
+          <input type="text" id="login-username" required placeholder="e.g. atlantis8998" autocomplete="username" class="w-full bg-[#101114] border border-[#24262f] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"/>
         </div>
 
         <div class="space-y-1.5">
           <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Password</label>
-          <input 
-            type="password" 
-            id="login-password" 
-            required 
-            placeholder="••••••••"
-            autocomplete="current-password"
-            class="w-full bg-[#101114] border border-[#24262f] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"
-          />
+          <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password" class="w-full bg-[#101114] border border-[#24262f] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"/>
         </div>
 
-        <div id="login-error" class="hidden text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg text-center font-medium">
+        <div id="login-error-banner" class="hidden text-[11px] text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg text-center font-medium">
           Invalid username or password.
         </div>
 
-        <button 
-          type="submit" 
-          id="btn-login-submit"
-          class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition shadow-sm mt-2 cursor-pointer"
-        >
+        <button type="submit" class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition shadow-sm mt-2">
           Sign In
         </button>
       </form>
@@ -93,7 +168,8 @@
 
   <!-- ======================== LEFT SIDEBAR ======================== -->
   <aside class="w-64 bg-[#121316] border-r border-[#1e2025] flex flex-col justify-between shrink-0 h-full">
-    <div class="p-4 space-y-4">
+    <div class="p-4 space-y-4 overflow-y-auto">
+      <!-- Workspace Brand -->
       <div class="flex items-center justify-between px-2 py-1">
         <div class="flex items-center gap-2.5">
           <div class="w-6 h-6 rounded bg-gradient-to-tr from-blue-600 via-indigo-500 to-amber-400 flex items-center justify-center shadow-md">
@@ -104,126 +180,173 @@
         <span id="role-indicator-badge" class="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider bg-[#1a1c22] px-2 py-0.5 rounded border border-[#26282f]">Dev</span>
       </div>
 
+      <!-- Quick Search Bar -->
       <div class="relative">
         <div class="flex items-center justify-between bg-[#18191e] border border-[#24262d] rounded-lg px-3 py-1.5 text-xs text-zinc-400">
           <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" id="global-search-input" oninput="handleSearch(this.value)" placeholder="Search tasks..." class="bg-transparent focus:outline-none text-zinc-200 w-28 placeholder-zinc-500 text-xs"/>
+            <input type="text" id="global-search-input" oninput="handleSearch(this.value)" placeholder="Search tasks..." class="bg-transparent focus:outline-none text-zinc-200 w-24 placeholder-zinc-500 text-xs"/>
           </div>
-          <span class="text-[10px] bg-[#22242b] text-zinc-400 px-1.5 py-0.5 rounded border border-[#2b2e38]">⌘ + k</span>
+          <span class="text-[10px] bg-[#22242b] text-zinc-400 px-1.5 py-0.5 rounded border border-[#2b2e36]">⌘+K</span>
         </div>
       </div>
 
+      <!-- Nav Links -->
       <nav class="space-y-1">
-        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition cursor-pointer">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
           <span>Dashboard</span>
         </button>
 
-        <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-white bg-[#1a1c22] border-l-2 border-white transition cursor-pointer">
+        <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-white bg-[#1a1c22] border-l-2 border-white transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
           <span>Tasks</span>
         </button>
 
-        <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition cursor-pointer">
+        <button onclick="switchTab('chat')" id="nav-chat" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <span>Team Chat</span>
+        </button>
+
+        <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-zinc-400 hover:text-white hover:bg-[#18191e] transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
           <span>Settings</span>
         </button>
 
-        <button onclick="switchTab('admin')" id="nav-admin" class="hidden w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-amber-400 hover:text-amber-300 hover:bg-[#18191e] transition cursor-pointer">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <span>Admin Hub</span>
+        <!-- Admin Only Navigation (Unlocked for atlantis8998 or Admin role) -->
+        <button onclick="switchTab('admin')" id="nav-admin" class="hidden w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-[#1f1d16] border border-amber-500/20 transition">
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <span>Admin Hub</span>
+          </div>
+          <span class="text-[9px] bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.2 rounded uppercase font-mono">Root</span>
         </button>
       </nav>
 
+      <!-- Projects Section -->
       <div class="pt-6 border-t border-[#1e2025]">
         <div class="flex items-center justify-between text-xs font-semibold text-zinc-400 mb-2 px-2">
-          <div class="flex items-center gap-1.5 hover:text-white cursor-pointer" onclick="openCreateProjectModal()">
+          <div class="flex items-center gap-1.5 hover:text-white cursor-pointer" onclick="openProjectModal()">
             <span>✦</span>
             <span>Add Project</span>
           </div>
           <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         </div>
+
         <div id="project-list" class="space-y-1"></div>
       </div>
     </div>
 
-    <div class="p-3 border-t border-[#1e2025] space-y-2">
-      <div class="flex items-center justify-between px-2 text-xs">
-        <span class="text-zinc-500">Logged in as:</span>
-        <span class="text-zinc-200 font-bold font-mono" id="active-user-display">---</span>
+    <!-- User Profile & Log Out Footer -->
+    <div class="p-3 border-t border-[#1e2025] flex items-center justify-between bg-[#0f1013]">
+      <div class="flex items-center gap-2.5 overflow-hidden">
+        <div class="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center font-bold text-xs text-white shrink-0" id="user-avatar-initial">A</div>
+        <div class="truncate">
+          <div class="text-xs font-semibold text-white truncate" id="sidebar-user-name">atlantis8998</div>
+          <div class="text-[10px] text-zinc-500 truncate" id="sidebar-user-role">Administrator</div>
+        </div>
       </div>
-      <button onclick="handleLogout()" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-500 hover:text-rose-400 hover:bg-[#1a1c22] transition cursor-pointer">
-        <span>Sign Out</span>
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+
+      <!-- Dedicated Logout Button -->
+      <button onclick="handleLogout()" title="Log Out" class="text-zinc-400 hover:text-rose-400 p-1.5 hover:bg-[#1a1b22] border border-transparent hover:border-[#2a2c36] rounded-lg transition flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
       </button>
     </div>
   </aside>
 
-  <!-- ======================== MAIN CONTENT AREA ======================== -->
+  <!-- ======================== MAIN VIEW AREA ======================== -->
   <main class="flex-1 flex flex-col h-full overflow-hidden bg-[#0e0f12]">
 
-    <!-- TASKS VIEW -->
+    <!-- ================== VIEW: TASKS VIEW ================== -->
     <section id="view-tasks" class="flex-1 flex flex-col h-full overflow-hidden">
+      <!-- Breadcrumb Bar & Header Controls -->
       <header class="h-12 border-b border-[#1e2025] px-6 flex items-center justify-between shrink-0 bg-[#101115]">
         <div class="flex items-center gap-2 text-xs">
           <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
           <span class="text-zinc-400 font-medium" id="current-project-label">Development</span>
-          <span id="current-project-staff-pill" class="hidden text-[10px] text-indigo-400 bg-indigo-950/60 border border-indigo-700/50 px-1.5 py-0.5 rounded font-bold">🔒 STAFF</span>
           <span class="text-zinc-600">›</span>
           <span class="bg-[#1c1d22] text-zinc-200 px-2 py-0.5 rounded font-medium border border-[#272932]">Tasks</span>
-          <span class="ml-2 text-[10px] text-zinc-500 bg-[#16171d] px-2 py-0.5 rounded border border-[#242631]" id="sprint-cycle-badge">2-Week Cycles</span>
+          <span id="current-project-lead-badge" class="ml-2 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-semibold">Lead: -</span>
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Grouping Dropdown -->
           <div class="relative">
-            <button onclick="toggleGroupingMenu()" id="btn-grouping" class="text-xs px-3 py-1 text-zinc-300 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
+            <button onclick="toggleGroupingMenu()" id="btn-grouping" class="text-xs px-3 py-1 text-zinc-300 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition">
               <span id="group-active-label">Group</span>
               <svg class="w-3 h-3 text-zinc-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
 
             <div id="menu-grouping" class="hidden absolute right-0 mt-1.5 w-44 bg-[#141519] border border-[#262831] rounded-xl shadow-2xl p-1 z-30 space-y-0.5">
-              <button onclick="setGrouping('none')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
-                <span class="w-4 text-center">✓</span> No Grouping
-              </button>
-              <button onclick="setGrouping('status')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
-                <span class="w-4 text-center">◌</span> Status
-              </button>
-              <button onclick="setGrouping('priority')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
-                <span class="w-4 text-center">⇅</span> Priority
-              </button>
-              <button onclick="setGrouping('type')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
-                <span class="w-4 text-center">✳</span> Type
-              </button>
-              <button onclick="setGrouping('assignee')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
-                <span class="w-4 text-center">👤</span> Assignee
-              </button>
-              <button onclick="setGrouping('sprint')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]">
-                <span class="w-4 text-center">◯</span> Sprint
-              </button>
+              <button onclick="setGrouping('none')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]"><span class="w-4 text-center">✓</span> No Grouping</button>
+              <button onclick="setGrouping('status')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]"><span class="w-4 text-center">◌</span> Status</button>
+              <button onclick="setGrouping('priority')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]"><span class="w-4 text-center">⇅</span> Priority</button>
+              <button onclick="setGrouping('type')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]"><span class="w-4 text-center">✳</span> Type</button>
+              <button onclick="setGrouping('assignee')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]"><span class="w-4 text-center">👤</span> Assignee</button>
+              <button onclick="setGrouping('sprint')" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-left rounded-lg text-zinc-300 hover:text-white hover:bg-[#1c1d24]"><span class="w-4 text-center">◯</span> Sprint</button>
             </div>
           </div>
 
-          <button onclick="promptCreateSprint()" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition cursor-pointer">
-            <span>+ Sprint Check-in</span>
+          <!-- Add Sprints (On-site modal) -->
+          <button onclick="openSprintModal()" title="Add Sprint milestone" class="text-xs px-2.5 py-1 text-zinc-400 hover:text-white bg-[#16171c] hover:bg-[#1e2026] rounded border border-[#24262e] flex items-center gap-1 transition">
+            <span>+ Sprint</span>
           </button>
 
-          <button onclick="openCreateTaskModal()" class="text-xs font-semibold px-3 py-1 bg-white hover:bg-zinc-200 text-black rounded transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+          <!-- Add Task Primary Button -->
+          <button onclick="openCreateTaskModal()" class="text-xs font-semibold px-3 py-1 bg-white hover:bg-zinc-200 text-black rounded transition shadow-sm flex items-center gap-1.5">
             <span>Add Task</span>
           </button>
         </div>
       </header>
 
+      <!-- Task Sub-Filter Bar -->
+      <div class="px-6 py-2 border-b border-[#1a1b20] flex items-center justify-between text-xs bg-[#0f1013]">
+        <div class="flex items-center gap-2">
+          <span class="text-zinc-500 font-medium">Filters:</span>
+          <button onclick="openCreateTaskModal()" class="w-5 h-5 rounded-md border border-[#24262e] bg-[#16171c] text-zinc-400 flex items-center justify-center hover:text-white text-xs">+</button>
+        </div>
+
+        <div class="flex items-center gap-1 bg-[#141519] p-0.5 rounded-lg border border-[#21232b]">
+          <button onclick="setFilter('all')" id="filter-all" class="px-2.5 py-0.5 rounded text-xs font-medium bg-[#22242c] text-white">All</button>
+          <button onclick="setFilter('me')" id="filter-me" class="px-2.5 py-0.5 rounded text-xs font-medium text-zinc-400 hover:text-white">Me</button>
+          <button onclick="setFilter('current')" id="filter-current" class="px-2.5 py-0.5 rounded text-xs font-medium text-zinc-400 hover:text-white">Current</button>
+          <button onclick="setFilter('backlog')" id="filter-backlog" class="px-2.5 py-0.5 rounded text-xs font-medium text-zinc-400 hover:text-white">Backlog</button>
+        </div>
+      </div>
+
+      <!-- Main Task Feed Area -->
       <div class="flex-1 overflow-y-auto p-6 space-y-6" id="tasks-container"></div>
     </section>
 
-    <!-- DASHBOARD VIEW -->
+    <!-- ================== VIEW: PROJECT CHAT VIEW ================== -->
+    <section id="view-chat" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-[#0e0f12]">
+      <header class="h-12 border-b border-[#1e2025] px-6 flex items-center justify-between shrink-0 bg-[#101115]">
+        <div class="flex items-center gap-2 text-xs">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <span class="text-white font-semibold" id="chat-project-title">Project Chat</span>
+          <span class="text-zinc-500">|</span>
+          <span class="text-xs text-zinc-400" id="chat-member-count">0 members</span>
+        </div>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-6 space-y-4" id="chat-messages-container"></div>
+
+      <div class="p-4 border-t border-[#1e2025] bg-[#111216]">
+        <form onsubmit="handleSendChatMessage(event)" class="flex gap-2">
+          <input type="text" id="chat-input" placeholder="Type a message to project members..." class="flex-1 bg-[#16171d] border border-[#262831] rounded-lg px-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"/>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-xs transition">Send</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================== VIEW: DASHBOARD VIEW ================== -->
     <section id="view-dashboard" class="hidden flex-1 flex flex-col h-full overflow-y-auto p-8 space-y-8">
       <div>
-        <h1 class="text-2xl font-bold text-white tracking-tight">Project Overview</h1>
-        <p class="text-xs text-zinc-500 mt-1">Live metrics across sprint check-in cycles and ongoing deliverables.</p>
+        <h1 class="text-2xl font-bold text-white tracking-tight" id="dash-greeting">Hello, User!</h1>
+        <p class="text-xs text-zinc-500 mt-1">Live overview of your project sprints and deliverables.</p>
       </div>
 
+      <!-- Metric Cards Grid -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-5 space-y-2">
           <div class="text-xs font-medium text-zinc-400">Backlog Tasks</div>
@@ -249,18 +372,18 @@
           <div id="dash-recent-tasks" class="text-xs text-zinc-500">You have no tasks yet!</div>
         </div>
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Sprint Check-in Milestones</h3>
-          <div id="dash-sprints-list" class="text-xs text-zinc-500">No active sprint cycles.</div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-400">Project Sprints</h3>
+          <div id="dash-sprints-list" class="text-xs text-zinc-500">No active sprints.</div>
         </div>
       </div>
     </section>
 
-    <!-- SETTINGS VIEW -->
+    <!-- ================== VIEW: SETTINGS VIEW ================== -->
     <section id="view-settings" class="hidden flex-1 overflow-y-auto p-10 space-y-8">
       <div class="max-w-3xl space-y-6">
         <div>
           <h2 class="text-xl font-bold text-white tracking-tight">Project Settings</h2>
-          <p class="text-xs text-zinc-500 mt-1">Configure project cadence, sprint intervals, and properties.</p>
+          <p class="text-xs text-zinc-500 mt-1">Configure metadata, theme colors, and assigned members.</p>
         </div>
 
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-5">
@@ -275,16 +398,6 @@
           </div>
 
           <div class="space-y-2">
-            <label class="text-xs font-semibold text-zinc-400">Sprint Check-in Cadence</label>
-            <select id="setting-project-duration" onchange="updateProjectDuration(this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
-              <option value="1 Week">1 Week</option>
-              <option value="2 Weeks">2 Weeks</option>
-              <option value="3 Weeks">3 Weeks</option>
-              <option value="4 Weeks">4 Weeks</option>
-            </select>
-          </div>
-
-          <div class="space-y-2">
             <label class="text-xs font-semibold text-zinc-400">Description</label>
             <textarea rows="3" id="setting-project-desc" onchange="updateProjectDesc(this.value)" placeholder="Describe your project..." class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
           </div>
@@ -292,7 +405,7 @@
           <div class="flex items-center justify-between pt-2">
             <div>
               <div class="text-xs font-semibold text-white">Customize theme color</div>
-              <div class="text-[11px] text-zinc-500">Choose an accent color for this project.</div>
+              <div class="text-[11px] text-zinc-500">Choose a signature badge color.</div>
             </div>
             <div class="flex items-center gap-2">
               <input type="color" id="setting-project-color" onchange="updateProjectColor(this.value)" class="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"/>
@@ -301,112 +414,185 @@
           </div>
         </div>
 
+        <!-- Project Members (Lead Developer & Admin Only) -->
+        <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-bold text-white uppercase tracking-wider">Project Members</div>
+              <p class="text-[11px] text-zinc-500" id="project-members-perm-notice">Add or remove developers from this project.</p>
+            </div>
+          </div>
+
+          <div id="add-member-form-row" class="flex gap-2">
+            <select id="assign-user-select" class="flex-1 bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none"></select>
+            <button onclick="assignUserToCurrentProject()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition">
+              Add Developer
+            </button>
+          </div>
+
+          <div class="border-t border-[#1e2025] pt-4 space-y-2" id="project-members-list"></div>
+        </div>
+
+        <!-- Danger Zone (Restricted to Lead Dev or Admin) -->
         <div class="bg-[#141519] border border-[#2a171a] rounded-xl p-6 space-y-3">
           <div class="text-xs font-bold text-rose-400 uppercase tracking-wider">Danger Zone</div>
-          <p class="text-xs text-zinc-500">Permanently delete this project or purge local cache.</p>
+          <p class="text-xs text-zinc-500">Only the designated Lead Developer or Master Admin can delete this project.</p>
           <div class="flex gap-3">
-            <button id="btn-delete-project-settings" onclick="deleteCurrentProject()" class="hidden px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer">
+            <button id="btn-delete-project" onclick="triggerProjectDeletion()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition">
               Delete Project
             </button>
-            <button onclick="clearAllData()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition cursor-pointer">
-              Reset Local Storage
+            <button onclick="triggerResetWorkspace()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition">
+              Reset All Workspace Data
             </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ADMIN HUB VIEW -->
+    <!-- ================== VIEW: ADMIN HUB (SUPER-ADMIN PERMISSIONS) ================== -->
     <section id="view-admin" class="hidden flex-1 overflow-y-auto p-10 space-y-8">
-      <div class="max-w-4xl space-y-6">
-        <div class="flex items-center justify-between">
+      <div class="max-w-5xl space-y-6">
+        <div class="flex items-center justify-between border-b border-[#22242c] pb-4">
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">Master Admin</span>
-              <h2 class="text-xl font-bold text-white tracking-tight">User Logins & Access Control</h2>
+              <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider">Super Administrator</span>
+              <h2 class="text-xl font-bold text-white tracking-tight">Master Admin Control Panel</h2>
             </div>
-            <p class="text-xs text-zinc-500 mt-1">Manage accounts and authorization across the workspace.</p>
+            <p class="text-xs text-zinc-500 mt-1">Full control over accounts, roles, live passwords, project overrides, and workspace locks.</p>
           </div>
-          <div id="password-visibility-controls">
-            <button onclick="openPasscodeModal()" id="btn-show-passwords" class="flex items-center gap-2 px-3 py-1.5 bg-[#1b1d24] hover:bg-[#232630] border border-[#2f3240] rounded-lg text-xs font-semibold text-amber-400 transition cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-              <span>Show Passwords</span>
-            </button>
-            <button onclick="hidePasswords()" id="btn-hide-passwords" class="hidden flex items-center gap-2 px-3 py-1.5 bg-[#1b1d24] hover:bg-[#232630] border border-[#2f3240] rounded-lg text-xs font-semibold text-zinc-400 transition cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>
-              <span>Hide Passwords</span>
-            </button>
+          <span class="text-xs font-mono text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20">Authenticated: atlantis8998</span>
+        </div>
+
+        <!-- Super-Admin Quick Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div class="bg-[#141519] border border-[#22242c] p-4 rounded-xl">
+            <div class="text-[11px] text-zinc-500 uppercase font-bold">Registered Users</div>
+            <div class="text-xl font-black text-white mt-1" id="stat-total-users">0</div>
+          </div>
+          <div class="bg-[#141519] border border-[#22242c] p-4 rounded-xl">
+            <div class="text-[11px] text-zinc-500 uppercase font-bold">Total Projects</div>
+            <div class="text-xl font-black text-blue-400 mt-1" id="stat-total-projects">0</div>
+          </div>
+          <div class="bg-[#141519] border border-[#22242c] p-4 rounded-xl">
+            <div class="text-[11px] text-zinc-500 uppercase font-bold">All Workspace Tasks</div>
+            <div class="text-xl font-black text-cyan-400 mt-1" id="stat-total-tasks">0</div>
+          </div>
+          <div class="bg-[#141519] border border-[#22242c] p-4 rounded-xl">
+            <div class="text-[11px] text-zinc-500 uppercase font-bold">Access Level</div>
+            <div class="text-xl font-black text-emerald-400 mt-1">Full Root (Unrestricted)</div>
           </div>
         </div>
 
+        <!-- Create User Account -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
-          <div class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <span>+ Create New User Login</span>
-          </div>
-
-          <form onsubmit="handleCreateUser(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Create New Workspace Account</h3>
+          <form onsubmit="handleCreateUser(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Username</label>
-              <input type="text" id="new-user-username" required placeholder="e.g. dev_user" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"/>
+              <label class="text-[11px] font-medium text-zinc-400 block mb-1">Username</label>
+              <input type="text" id="admin-new-username" required placeholder="e.g. dev_sarah" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500"/>
             </div>
             <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Password</label>
-              <input type="password" id="new-user-password" required placeholder="••••••••" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"/>
+              <label class="text-[11px] font-medium text-zinc-400 block mb-1">Password</label>
+              <input type="text" id="admin-new-password" required placeholder="Set password" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500"/>
             </div>
             <div>
-              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Role</label>
-              <select id="new-user-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none">
-                <option value="Developer">Developer</option>
-                <option value="Admin">Admin</option>
-                <option value="Viewer">Viewer</option>
+              <label class="text-[11px] font-medium text-zinc-400 block mb-1">Role / Permissions</label>
+              <select id="admin-new-role" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none">
+                <option value="Administrator">Administrator (Full Admin)</option>
+                <option value="Developer" selected>Developer (Read/Write Tasks)</option>
+                <option value="DevOps">DevOps / Infra</option>
+                <option value="Viewer">Viewer (Read Only)</option>
               </select>
             </div>
             <div class="flex items-end">
-              <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg transition shadow-sm cursor-pointer">
-                Add User
+              <button type="submit" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs transition shadow-sm">
+                + Add Account
               </button>
             </div>
           </form>
         </div>
 
+        <!-- User Accounts & Live Role/Password Editor Table -->
         <div class="bg-[#141519] border border-[#22242c] rounded-xl overflow-hidden">
-          <div class="p-4 border-b border-[#1e2025] flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-zinc-400">All Registered Users</span>
-            <span class="text-xs text-zinc-500" id="user-count-display">0 Users</span>
+          <div class="px-6 py-4 border-b border-[#22242c] flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider">User Directory & Direct Permission Editor</h3>
+              <p class="text-[11px] text-zinc-500 mt-0.5">As master admin, you can alter user passwords or promote/demote roles on the fly.</p>
+            </div>
+            <span class="text-xs text-zinc-400" id="admin-user-count">Total: 1</span>
           </div>
-          <div class="divide-y divide-[#1c1d24]" id="admin-user-list"></div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-[#101114] text-zinc-400 border-b border-[#22242c]">
+                <tr>
+                  <th class="px-6 py-3 font-semibold">User</th>
+                  <th class="px-6 py-3 font-semibold">Password (Editable)</th>
+                  <th class="px-6 py-3 font-semibold">Role</th>
+                  <th class="px-6 py-3 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-user-table-body" class="divide-y divide-[#1e2028]"></tbody>
+            </table>
+          </div>
         </div>
+
+        <!-- Master Administration Tools -->
+        <div class="bg-[#141519] border border-[#22242c] rounded-xl p-6 space-y-4">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Super-Admin Workspace Operations</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="border border-[#282a33] bg-[#101114] p-4 rounded-xl space-y-2">
+              <div class="text-xs font-bold text-white">Purge All Completed Tasks</div>
+              <p class="text-[11px] text-zinc-500">Deletes all 'Done' tasks across all projects simultaneously to free up board clutter.</p>
+              <button onclick="adminPurgeDoneTasks()" class="w-full py-1.5 bg-[#1f2027] hover:bg-[#282a35] text-zinc-200 border border-[#2f313e] rounded-lg text-xs font-semibold transition">
+                Purge Done Tasks
+              </button>
+            </div>
+
+            <div class="border border-[#282a33] bg-[#101114] p-4 rounded-xl space-y-2">
+              <div class="text-xs font-bold text-white">Export Workspace Backup</div>
+              <p class="text-[11px] text-zinc-500">Generates a live JSON dump of all projects, sprints, tasks, and team credentials.</p>
+              <button onclick="adminExportWorkspace()" class="w-full py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition">
+                Export JSON Backup
+              </button>
+            </div>
+
+            <div class="border border-[#381a1f] bg-[#101114] p-4 rounded-xl space-y-2">
+              <div class="text-xs font-bold text-rose-400">Force Master Reset</div>
+              <p class="text-[11px] text-zinc-500">Instantly wipes database back to pristine initial state with atlantis8998 credentials.</p>
+              <button onclick="triggerResetWorkspace()" class="w-full py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-semibold transition">
+                Hard Factory Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
+
   </main>
 
-  <!-- ======================== MODAL: TASK DETAIL VIEW ======================== -->
-  <div id="modal-task-detail" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-[#15161a] border border-[#262832] w-full max-w-2xl rounded-2xl p-6 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-[#22242c] pb-3">
-        <div class="flex items-center gap-2 text-xs text-zinc-400">
-          <span id="detail-project-name">Development</span>
-          <span>›</span>
-          <span class="text-white font-medium">Task Details</span>
-        </div>
-        <button onclick="closeTaskDetailModal()" class="text-zinc-500 hover:text-zinc-200 text-sm cursor-pointer">✕</button>
-      </div>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Title</label>
-          <input type="text" id="detail-task-title" onchange="updateActiveTaskField('title', this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-xl px-4 py-2.5 text-base font-semibold text-white focus:outline-none focus:border-blue-500"/>
+  <!-- ======================== SLIDE-OUT TASK DETAIL DRAWER ======================== -->
+  <div id="drawer-task-detail" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-[85] flex justify-end">
+    <div class="w-full max-w-lg bg-[#141519] border-l border-[#242630] h-full flex flex-col justify-between shadow-2xl p-6 overflow-y-auto">
+      <div class="space-y-6">
+        <div class="flex items-center justify-between border-b border-[#20222a] pb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono px-2 py-0.5 rounded bg-[#1c1d24] border border-[#282a33] text-zinc-300" id="detail-task-id">TASK</span>
+            <span class="text-xs font-semibold text-zinc-400" id="detail-project-name">Development</span>
+          </div>
+          <button onclick="closeTaskDetailDrawer()" class="text-zinc-500 hover:text-white text-sm">✕</button>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Description</label>
-          <textarea rows="4" id="detail-task-desc" onchange="updateActiveTaskField('description', this.value)" placeholder="Add more detailed context or notes..." class="w-full bg-[#101114] border border-[#262831] rounded-xl p-3 text-xs text-zinc-300 focus:outline-none focus:border-blue-500"></textarea>
+        <div class="space-y-3">
+          <input type="text" id="detail-task-title" onchange="updateTaskDetailField('title', this.value)" class="w-full bg-transparent text-lg font-bold text-white focus:outline-none border-b border-transparent focus:border-blue-500 pb-1"/>
+          <textarea rows="4" id="detail-task-desc" onchange="updateTaskDetailField('description', this.value)" placeholder="Task specifications..." class="w-full bg-[#101114] border border-[#242630] rounded-xl p-3 text-xs text-zinc-300 focus:outline-none focus:border-blue-500"></textarea>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+        <div class="grid grid-cols-2 gap-4 border-t border-[#20222a] pt-4">
           <div>
-            <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Status</label>
-            <select id="detail-task-status" onchange="updateActiveTaskField('status', this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none">
+            <label class="text-[11px] font-semibold text-zinc-500 block mb-1">Status</label>
+            <select id="detail-task-status" onchange="updateTaskDetailField('status', this.value)" class="w-full bg-[#101114] border border-[#242630] rounded-lg p-2 text-xs text-white focus:outline-none">
               <option value="Backlog">◌ Backlog</option>
               <option value="To Do">◉ To Do</option>
               <option value="In Progress">◑ In Progress</option>
@@ -414,139 +600,51 @@
               <option value="Done">✓ Done</option>
             </select>
           </div>
-
           <div>
-            <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Priority</label>
-            <select id="detail-task-priority" onchange="updateActiveTaskField('priority', this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none">
-              <option value="None">None</option>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
+            <label class="text-[11px] font-semibold text-zinc-500 block mb-1">Priority</label>
+            <select id="detail-task-priority" onchange="updateTaskDetailField('priority', this.value)" class="w-full bg-[#101114] border border-[#242630] rounded-lg p-2 text-xs text-white focus:outline-none">
+              <option value="None">一 None</option>
+              <option value="Low">↓ Low</option>
+              <option value="Medium">→ Medium</option>
+              <option value="High">↑ High</option>
+              <option value="Critical">⚠ Critical</option>
             </select>
           </div>
-
           <div>
-            <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Points</label>
-            <select id="detail-task-points" onchange="updateActiveTaskField('points', this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none">
-              <option value="No Estimate">No Estimate</option>
-              <option value="1 Point">1 Point</option>
-              <option value="2 Points">2 Points</option>
-              <option value="3 Points">3 Points</option>
-              <option value="5 Points">5 Points</option>
+            <label class="text-[11px] font-semibold text-zinc-500 block mb-1">Type</label>
+            <select id="detail-task-type" onchange="updateTaskDetailField('type', this.value)" class="w-full bg-[#101114] border border-[#242630] rounded-lg p-2 text-xs text-white focus:outline-none">
+              <option value="Task">⊞ Task</option>
+              <option value="Feature">⚑ Feature</option>
+              <option value="Improvement">📈 Improvement</option>
+              <option value="Research">🔍 Research</option>
+              <option value="Bug">🪲 Bug</option>
             </select>
           </div>
-
           <div>
-            <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Issue Type</label>
-            <select id="detail-task-type" onchange="updateActiveTaskField('type', this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none">
-              <option value="Task">Task</option>
-              <option value="Feature">Feature</option>
-              <option value="Improvement">Improvement</option>
-              <option value="Research">Research</option>
-              <option value="Testing">Testing</option>
-              <option value="Bug">Bug</option>
+            <label class="text-[11px] font-semibold text-zinc-500 block mb-1">Points Estimate</label>
+            <select id="detail-task-points" onchange="updateTaskDetailField('points', this.value)" class="w-full bg-[#101114] border border-[#242630] rounded-lg p-2 text-xs text-white focus:outline-none">
+              <option value="No Estimate">⬡ No Estimate</option>
+              <option value="1 Point">⬡ 1 Point</option>
+              <option value="2 Points">⬡ 2 Points</option>
+              <option value="3 Points">⬡ 3 Points</option>
+              <option value="5 Points">⬡ 5 Points</option>
             </select>
           </div>
-
           <div>
-            <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Assignee</label>
-            <select id="detail-task-assignee" onchange="updateActiveTaskField('assignee', this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none"></select>
+            <label class="text-[11px] font-semibold text-zinc-500 block mb-1">Assignee</label>
+            <select id="detail-task-assignee" onchange="updateTaskDetailField('assignee', this.value)" class="w-full bg-[#101114] border border-[#242630] rounded-lg p-2 text-xs text-white focus:outline-none"></select>
           </div>
-
           <div>
-            <label class="block text-[10px] font-bold uppercase text-zinc-500 mb-1">Sprint</label>
-            <select id="detail-task-sprint" onchange="updateActiveTaskField('sprint', this.value)" class="w-full bg-[#101114] border border-[#262831] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:outline-none"></select>
+            <label class="text-[11px] font-semibold text-zinc-500 block mb-1">Sprint</label>
+            <select id="detail-task-sprint" onchange="updateTaskDetailField('sprint', this.value)" class="w-full bg-[#101114] border border-[#242630] rounded-lg p-2 text-xs text-white focus:outline-none"></select>
           </div>
         </div>
       </div>
 
-      <div class="flex items-center justify-between pt-4 border-t border-[#22242c]">
-        <div id="detail-admin-delete-zone"></div>
-        <button onclick="closeTaskDetailModal()" class="px-5 py-2 bg-white hover:bg-zinc-200 text-black text-xs font-bold rounded-lg cursor-pointer transition">
-          Close
-        </button>
+      <div class="border-t border-[#20222a] pt-4 flex justify-between items-center">
+        <button id="btn-delete-detail-task" onclick="deleteActiveDetailTask()" class="text-xs text-rose-400 hover:text-rose-300 font-semibold">Delete Task</button>
+        <button onclick="closeTaskDetailDrawer()" class="px-4 py-2 bg-white text-black hover:bg-zinc-200 text-xs font-bold rounded-lg transition shadow-sm">Save & Close</button>
       </div>
-    </div>
-  </div>
-
-  <!-- ======================== MODAL: PASSCODE VERIFICATION (0107) ======================== -->
-  <div id="modal-passcode-gate" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-[#141518] border border-[#262832] w-full max-w-xs rounded-2xl p-6 shadow-2xl space-y-4">
-      <div class="text-center space-y-1">
-        <div class="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-xs">
-          🔒
-        </div>
-        <h3 class="text-sm font-bold text-white">Enter Admin Code</h3>
-        <p class="text-[11px] text-zinc-500">Provide authorization code to decrypt user passwords.</p>
-      </div>
-
-      <form onsubmit="handlePasscodeSubmit(event)" class="space-y-3">
-        <input 
-          type="password" 
-          id="admin-passcode-input" 
-          maxlength="6"
-          placeholder="Code" 
-          required 
-          class="w-full text-center tracking-widest font-mono text-base bg-[#0e0f12] border border-[#2a2c38] rounded-lg py-2 text-white focus:outline-none focus:border-amber-500"
-        />
-        <div id="passcode-error" class="hidden text-[10px] text-rose-400 text-center font-medium">
-          Incorrect passcode. Access denied.
-        </div>
-        <div class="flex gap-2">
-          <button type="button" onclick="closePasscodeModal()" class="w-1/2 py-2 text-xs text-zinc-400 hover:text-white rounded-lg bg-[#181920] border border-[#242632] transition cursor-pointer">
-            Cancel
-          </button>
-          <button type="submit" class="w-1/2 py-2 text-xs font-bold text-black bg-amber-500 hover:bg-amber-400 rounded-lg transition cursor-pointer">
-            Verify
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ======================== MODAL: CREATE PROJECT (WITH ADMIN-ONLY STAFF OPTION) ======================== -->
-  <div id="modal-create-project" class="hidden fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-[#141518] border border-[#262832] w-full max-w-md rounded-2xl p-7 shadow-2xl space-y-5 relative">
-      <button onclick="closeCreateProjectModal()" class="absolute top-5 right-5 text-zinc-500 hover:text-zinc-200 text-sm cursor-pointer">✕</button>
-      <h2 class="text-xl font-bold text-white tracking-tight">Create Project</h2>
-
-      <form onsubmit="handleCreateProjectSubmit(event)" class="space-y-4">
-        <div class="space-y-1">
-          <input type="text" id="new-project-name" required placeholder="Name" class="w-full bg-[#101114] border border-[#2b2d37] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-400"/>
-        </div>
-
-        <div class="bg-[#17181d] border border-[#242630] rounded-xl p-4 flex items-center justify-between">
-          <div class="space-y-0.5">
-            <div class="text-xs font-bold text-white">Sprint Duration</div>
-            <div class="text-[11px] text-zinc-500">How long each work period will last.</div>
-          </div>
-          <select id="new-project-duration" class="bg-[#121316] border border-[#2b2e38] text-zinc-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none cursor-pointer">
-            <option value="1 Week">1 Week</option>
-            <option value="2 Weeks" selected>2 Weeks</option>
-            <option value="3 Weeks">3 Weeks</option>
-            <option value="4 Weeks">4 Weeks</option>
-          </select>
-        </div>
-
-        <!-- Staff Project Option (Rendered dynamically for Admins only) -->
-        <div id="staff-project-toggle-container" class="hidden bg-[#151622] border border-[#292c44] rounded-xl p-4 space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="space-y-0.5">
-              <div class="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
-                <span>🔒 Staff Project</span>
-                <span class="text-[9px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.2 rounded border border-indigo-500/30">ADMINS ONLY</span>
-              </div>
-              <div class="text-[11px] text-zinc-400">Restricted workspace. Only admins can see and interact with this project and its tasks.</div>
-            </div>
-            <input type="checkbox" id="new-project-is-staff" class="w-4 h-4 accent-indigo-500 rounded cursor-pointer" />
-          </div>
-        </div>
-
-        <button type="submit" class="w-full py-3 bg-[#44464f] hover:bg-[#52545f] text-zinc-200 hover:text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
-          Create Project
-        </button>
-      </form>
     </div>
   </div>
 
@@ -555,82 +653,82 @@
     <div class="bg-[#15161a] border border-[#262832] w-full max-w-xl rounded-2xl p-6 shadow-2xl space-y-5 relative">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold text-zinc-300 bg-[#202127] border border-[#2c2e38] px-2.5 py-0.5 rounded-md" id="modal-project-badge">Development</span>
-        <button onclick="closeCreateTaskModal()" class="text-zinc-500 hover:text-zinc-200 text-sm cursor-pointer">✕</button>
+        <button onclick="closeCreateTaskModal()" class="text-zinc-500 hover:text-zinc-200 text-sm">✕</button>
       </div>
 
       <div class="space-y-2">
         <input type="text" id="new-task-title" placeholder="New Task" class="w-full bg-transparent text-lg font-semibold text-white placeholder-zinc-500 focus:outline-none"/>
-        <textarea rows="3" id="new-task-desc" placeholder="Add a description or type '/' for commands..." class="w-full bg-transparent text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none resize-none"></textarea>
+        <textarea rows="3" id="new-task-desc" placeholder="Add a description or specifications..." class="w-full bg-transparent text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none resize-none"></textarea>
       </div>
 
+      <!-- Task Attributes -->
       <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-[#1f2129]">
         <!-- Status -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('status')" id="btn-modal-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
+          <button onclick="toggleModalMenu('status')" id="btn-modal-status" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">◌</span>
             <span id="label-modal-status">Backlog</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-status" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('status', 'Backlog')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded cursor-pointer"><span>◌</span> Backlog</button>
-            <button type="button" onclick="selectModalAttribute('status', 'To Do')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-lime-400 hover:bg-[#20222a] rounded cursor-pointer"><span>◉</span> To Do</button>
-            <button type="button" onclick="selectModalAttribute('status', 'In Progress')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded cursor-pointer"><span>◑</span> In Progress</button>
-            <button type="button" onclick="selectModalAttribute('status', 'In Review')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded cursor-pointer"><span>👁</span> In Review</button>
-            <button type="button" onclick="selectModalAttribute('status', 'Done')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-emerald-400 hover:bg-[#20222a] rounded cursor-pointer"><span>✓</span> Done</button>
+            <button onclick="selectModalAttribute('status', 'Backlog')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded"><span>◌</span> Backlog</button>
+            <button onclick="selectModalAttribute('status', 'To Do')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-lime-400 hover:bg-[#20222a] rounded"><span>◉</span> To Do</button>
+            <button onclick="selectModalAttribute('status', 'In Progress')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded"><span>◑</span> In Progress</button>
+            <button onclick="selectModalAttribute('status', 'In Review')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded"><span>👁</span> In Review</button>
+            <button onclick="selectModalAttribute('status', 'Done')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-emerald-400 hover:bg-[#20222a] rounded"><span>✓</span> Done</button>
           </div>
         </div>
 
         <!-- Story Points -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('points')" id="btn-modal-points" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
+          <button onclick="toggleModalMenu('points')" id="btn-modal-points" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">⬡</span>
             <span id="label-modal-points">1 Point</span>
           </button>
           <div id="pop-modal-points" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('points', 'No Estimate')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">⬡ No Estimate</button>
-            <button type="button" onclick="selectModalAttribute('points', '1 Point')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 1 Point</button>
-            <button type="button" onclick="selectModalAttribute('points', '2 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 2 Points</button>
-            <button type="button" onclick="selectModalAttribute('points', '3 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 3 Points</button>
-            <button type="button" onclick="selectModalAttribute('points', '5 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">⬡ 5 Points</button>
+            <button onclick="selectModalAttribute('points', 'No Estimate')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">⬡ No Estimate</button>
+            <button onclick="selectModalAttribute('points', '1 Point')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 1 Point</button>
+            <button onclick="selectModalAttribute('points', '2 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 2 Points</button>
+            <button onclick="selectModalAttribute('points', '3 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 3 Points</button>
+            <button onclick="selectModalAttribute('points', '5 Points')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">⬡ 5 Points</button>
           </div>
         </div>
 
         <!-- Priority -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('priority')" id="btn-modal-priority" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
+          <button onclick="toggleModalMenu('priority')" id="btn-modal-priority" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">一</span>
             <span id="label-modal-priority">None</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-priority" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('priority', 'None')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">一 None</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Low')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded cursor-pointer">↓ Low</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Medium')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded cursor-pointer">→ Medium</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'High')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded cursor-pointer">↑ High</button>
-            <button type="button" onclick="selectModalAttribute('priority', 'Critical')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded cursor-pointer">⚠ Critical</button>
+            <button onclick="selectModalAttribute('priority', 'None')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">一 None</button>
+            <button onclick="selectModalAttribute('priority', 'Low')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">↓ Low</button>
+            <button onclick="selectModalAttribute('priority', 'Medium')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-400 hover:bg-[#20222a] rounded">→ Medium</button>
+            <button onclick="selectModalAttribute('priority', 'High')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded">↑ High</button>
+            <button onclick="selectModalAttribute('priority', 'Critical')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">⚠ Critical</button>
           </div>
         </div>
 
-        <!-- Issue Type -->
+        <!-- Type -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('type')" id="btn-modal-type" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
+          <button onclick="toggleModalMenu('type')" id="btn-modal-type" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">⊞</span>
             <span id="label-modal-type">Task</span>
             <svg class="w-3 h-3 text-zinc-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div id="pop-modal-type" class="hidden absolute bottom-full mb-1 left-0 w-36 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5">
-            <button type="button" onclick="selectModalAttribute('type', 'Task')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded cursor-pointer">⊞ Task</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Feature')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-purple-400 hover:bg-[#20222a] rounded cursor-pointer">⚑ Feature</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Improvement')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded cursor-pointer">📈 Improvement</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Research')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-teal-400 hover:bg-[#20222a] rounded cursor-pointer">🔍 Research</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Testing')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-amber-400 hover:bg-[#20222a] rounded cursor-pointer">🧪 Testing</button>
-            <button type="button" onclick="selectModalAttribute('type', 'Bug')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded cursor-pointer">🪲 Bug</button>
+            <button onclick="selectModalAttribute('type', 'Task')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-300 hover:bg-[#20222a] rounded">⊞ Task</button>
+            <button onclick="selectModalAttribute('type', 'Feature')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-purple-400 hover:bg-[#20222a] rounded">⚑ Feature</button>
+            <button onclick="selectModalAttribute('type', 'Improvement')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-[#20222a] rounded">📈 Improvement</button>
+            <button onclick="selectModalAttribute('type', 'Research')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-teal-400 hover:bg-[#20222a] rounded">🔍 Research</button>
+            <button onclick="selectModalAttribute('type', 'Bug')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-rose-400 hover:bg-[#20222a] rounded">🪲 Bug</button>
           </div>
         </div>
 
-        <!-- Assignee (Admin Only Assign Control) -->
+        <!-- Assignee -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
+          <button onclick="toggleModalMenu('assignee')" id="btn-modal-assignee" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-zinc-400">👤</span>
             <span id="label-modal-assignee">Unassigned</span>
           </button>
@@ -639,74 +737,78 @@
 
         <!-- Sprint -->
         <div class="relative">
-          <button type="button" onclick="toggleModalMenu('sprint')" id="btn-modal-sprint" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300 cursor-pointer">
+          <button onclick="toggleModalMenu('sprint')" id="btn-modal-sprint" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1b20] hover:bg-[#22242c] border border-[#282a34] text-xs text-zinc-300">
             <span class="text-cyan-400">◯</span>
             <span id="label-modal-sprint">No Sprint</span>
           </button>
-          <div id="pop-modal-sprint" class="hidden absolute bottom-full mb-1 left-0 w-52 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5"></div>
+          <div id="pop-modal-sprint" class="hidden absolute bottom-full mb-1 left-0 w-48 bg-[#16171d] border border-[#282b36] rounded-xl shadow-xl p-1 z-50 space-y-0.5"></div>
         </div>
       </div>
 
       <div class="flex justify-end gap-2 pt-3 border-t border-[#1f2129]">
-        <button type="button" onclick="closeCreateTaskModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white transition cursor-pointer">Cancel</button>
-        <button type="button" onclick="submitNewTask()" class="px-5 py-2 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition cursor-pointer">Create</button>
+        <button onclick="closeCreateTaskModal()" class="px-4 py-2 text-xs text-zinc-400 hover:text-white transition">Cancel</button>
+        <button onclick="submitNewTask()" class="px-5 py-2 bg-white hover:bg-zinc-200 text-black rounded-lg text-xs font-bold transition">Create Task</button>
       </div>
     </div>
   </div>
 
-  <!-- ======================== APPLICATION LOGIC ======================== -->
+  <!-- ======================== SCRIPT ENGINE ======================== -->
   <script>
     const SUPABASE_URL = "https://xlbhnzbpljpkxlkxehqq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYmhuemJwbGpwa3hsa3hlaHFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3MDI4MzYsImV4cCI6MjEwODI3ODgzNn0.k__ntBUjHHR8VVpSFP41u0G9HRlPJeohzhT452vw5sw";
 
     let supabaseClient = null;
-    if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY) {
-      try {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } catch (err) {
-        console.warn("Supabase initialization error:", err);
-      }
+    if (window.supabase) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
 
     const STORAGE_KEY = 'vandrik_full_workspace_v3';
-    const AUTH_SESSION_KEY = 'vandrik_active_user_session';
-    const PASSWORDS_REVEALED_KEY = 'vandrik_passwords_revealed_session';
-    const MASTER_PIN = "0107";
+    const SESSION_KEY = 'vandrik_active_user_session';
 
-    const INITIAL_WORKSPACE = {
+    const INITIAL_DATA = {
+      users: [
+        { username: 'atlantis8998', password: 'StringsandKeys16', role: 'Administrator' },
+        { username: 'test', password: 'test', role: 'Developer' }
+      ],
       activeProjectId: 'proj-1',
       groupingMode: 'none',
-      users: [
-        { username: 'atlantis8998', password: 'StringsandKeys16', role: 'Admin', createdAt: 'Active' },
-        { username: 'ryanr', password: 'RyanDev#1051', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'yellojello', password: 'JelloDev#1055', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'aleetzbarr', password: 'Aleetz#1064', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'jishnusatheesh', password: 'Jishnu#1068', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'jouba', password: 'Jouba#1074', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'lirusiza32', password: 'Lirusiza#1076', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'murtuza777', password: 'Murtuza#1082', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'raj', password: 'RajDev#1085', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'sanjeev', password: 'SanJeev#1088', role: 'Developer', createdAt: '2026-10-22' },
-        { username: 'venu', password: 'VenuDev#1095', role: 'Developer', createdAt: '2026-10-22' }
-      ],
+      activeFilter: 'all',
       projects: [
         {
           id: 'proj-1',
           name: 'Development',
-          sprintDuration: '2 Weeks',
-          description: 'Core platform engineering workspace.',
+          description: 'Main production workspace',
           color: '#ffbe0b',
-          isStaff: false,
+          leadDeveloper: 'atlantis8998',
+          members: ['atlantis8998', 'test'],
           sprints: [
             { id: 'sp-1', name: 'Cycle 1 (Initial Setup)', duration: '2 Weeks' }
           ]
         }
       ],
-      tasks: []
+      tasks: [],
+      projectMessages: {}
     };
 
-    let AppState = JSON.parse(JSON.stringify(INITIAL_WORKSPACE));
-    let activeTaskDetailId = null;
+    function loadDatabase() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try { 
+          const parsed = JSON.parse(stored);
+          if (!parsed.projectMessages) parsed.projectMessages = {};
+          parsed.projects.forEach(p => {
+            if (!p.leadDeveloper) p.leadDeveloper = p.members?.[0] || 'atlantis8998';
+            if (!Array.isArray(p.members)) p.members = [p.leadDeveloper];
+          });
+          return parsed;
+        } catch (e) { 
+          console.error('Corrupted DB', e); 
+        }
+      }
+      return JSON.parse(JSON.stringify(INITIAL_DATA));
+    }
+
+    const AppState = loadDatabase();
 
     let draftTask = {
       status: 'Backlog',
@@ -717,318 +819,496 @@
       sprint: 'No Sprint'
     };
 
-    // Helper: Determine if logged-in session is an Admin
-    function isCurrentUserAdmin() {
-      const activeUser = sessionStorage.getItem(AUTH_SESSION_KEY);
-      if (!activeUser) return false;
-      if (activeUser === 'atlantis8998') return true;
-      const user = AppState.users.find(u => u.username === activeUser);
-      return user && (user.role === 'Admin' || user.role === 'Administrator');
-    }
+    let activeDetailTaskId = null;
 
-    async function loadWorkspaceFromCloudOrLocal() {
-      if (supabaseClient) {
-        try {
-          const [uRes, pRes, tRes] = await Promise.all([
-            supabaseClient.from('users').select('*'),
-            supabaseClient.from('projects').select('*'),
-            supabaseClient.from('tasks').select('*')
-          ]);
-
-          if (!uRes.error && uRes.data && uRes.data.length > 0) {
-            AppState.users = uRes.data.map(u => ({ username: u.username, password: u.password, role: u.role, createdAt: u.created_at }));
-          }
-          if (!pRes.error && pRes.data && pRes.data.length > 0) {
-            AppState.projects = pRes.data.map(p => ({
-              id: p.id,
-              name: p.name,
-              sprintDuration: p.sprint_duration,
-              description: p.description,
-              color: p.color,
-              isStaff: !!p.is_staff,
-              sprints: p.sprints || []
-            }));
-          }
-          if (!tRes.error && tRes.data) {
-            AppState.tasks = tRes.data.map(t => ({
-              id: t.id,
-              projectId: t.project_id,
-              title: t.title,
-              description: t.description || '',
-              status: t.status || 'Backlog',
-              points: t.points || '1 Point',
-              priority: t.priority || 'None',
-              type: t.type || 'Task',
-              assignee: t.assignee || 'Unassigned',
-              sprint: t.sprint || 'No Sprint'
-            }));
-          }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
-          return;
-        } catch (err) {
-          console.warn("Supabase fetch error, fallback to local:", err);
-        }
-      }
-
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          AppState = JSON.parse(stored);
-        } catch (e) {
-          console.error("Local storage parse error:", e);
-        }
-      }
-    }
-
-    function saveWorkspace() {
+    function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
     }
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      await loadWorkspaceFromCloudOrLocal();
-      checkAuth();
-      validateActiveProjectAccess();
+    // ------------------------------------------------------------------
+    // ON-SITE NOTIFICATION / TOAST SYSTEM
+    // ------------------------------------------------------------------
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        info: 'bg-[#181920] border-[#2b2e3b] text-zinc-200',
+        success: 'bg-[#102319] border-emerald-500/30 text-emerald-300',
+        error: 'bg-[#261316] border-rose-500/30 text-rose-300',
+        warning: 'bg-[#292212] border-amber-500/30 text-amber-300'
+      };
 
-      renderProjectsSidebar();
-      syncProjectHeader();
-      renderTasksFeed();
-      renderDashboardMetrics();
-      renderAdminUsers();
-      updatePasswordVisibilityUI();
-      syncAdminPermissionsUI();
+      toast.className = `px-4 py-2.5 rounded-xl border text-xs shadow-2xl flex items-center gap-2.5 pointer-events-auto transition animate-toast ${colors[type] || colors.info}`;
+      toast.innerHTML = `
+        <span class="w-1.5 h-1.5 rounded-full ${type === 'success' ? 'bg-emerald-400' : type === 'error' ? 'bg-rose-400' : 'bg-blue-400'}"></span>
+        <span class="font-medium">${escapeHtml(message)}</span>
+      `;
 
-      if (supabaseClient) {
-        try {
-          supabaseClient
-            .channel('public:tasks')
-            .on(
-              'postgres_changes',
-              { event: '*', schema: 'public', table: 'tasks' },
-              async () => {
-                await loadWorkspaceFromCloudOrLocal();
-                renderTasksFeed();
-                renderDashboardMetrics();
-              }
-            )
-            .subscribe();
-        } catch(e) {}
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 250);
+      }, 3200);
+    }
+
+    let confirmCallback = null;
+    function showConfirmModal(title, message, onConfirm) {
+      document.getElementById('confirm-title').innerText = title;
+      document.getElementById('confirm-message').innerText = message;
+      document.getElementById('modal-confirm').classList.remove('hidden');
+      confirmCallback = onConfirm;
+    }
+
+    function closeConfirmModal(accepted) {
+      document.getElementById('modal-confirm').classList.add('hidden');
+      if (accepted && confirmCallback) {
+        confirmCallback();
       }
+      confirmCallback = null;
+    }
+
+    document.getElementById('btn-confirm-accept').addEventListener('click', () => {
+      closeConfirmModal(true);
     });
 
-    // -------------------------------------------------------------
-    // AUTHENTICATION & ACCESS CONTROL
-    // -------------------------------------------------------------
-    function getActiveSession() {
-      return sessionStorage.getItem(AUTH_SESSION_KEY);
+    // ------------------------------------------------------------------
+    // AUTHENTICATION & PERMISSIONS
+    // ------------------------------------------------------------------
+    function getCurrentUser() {
+      const username = sessionStorage.getItem(SESSION_KEY);
+      if (!username) return null;
+      return AppState.users.find(u => u.username === username) || null;
     }
 
-    function syncAdminPermissionsUI() {
-      const deleteProjBtn = document.getElementById('btn-delete-project-settings');
-      if (deleteProjBtn) {
-        if (isCurrentUserAdmin()) {
-          deleteProjBtn.classList.remove('hidden');
-        } else {
-          deleteProjBtn.classList.add('hidden');
-        }
+    function isCurrentUserAdmin() {
+      const u = getCurrentUser();
+      return u && (u.username === 'atlantis8998' || u.role === 'Administrator');
+    }
+
+    function isCurrentUserProjectLead(project = getCurrentProject()) {
+      if (!project) return false;
+      const u = getCurrentUser();
+      if (!u) return false;
+      return isCurrentUserAdmin() || project.leadDeveloper === u.username;
+    }
+
+    // Projects visible to current user
+    function getVisibleProjects() {
+      const u = getCurrentUser();
+      if (!u) return [];
+      if (isCurrentUserAdmin()) {
+        return AppState.projects;
+      }
+      return AppState.projects.filter(p => {
+        const isLead = p.leadDeveloper === u.username;
+        const isMember = Array.isArray(p.members) && p.members.includes(u.username);
+        return isLead || isMember;
+      });
+    }
+
+    function ensureActiveProjectValid() {
+      const visible = getVisibleProjects();
+      if (!visible.some(p => p.id === AppState.activeProjectId)) {
+        AppState.activeProjectId = visible[0]?.id || null;
       }
     }
 
-    function checkAuth() {
-      const username = getActiveSession();
+    function verifyAuth() {
+      const user = getCurrentUser();
       const overlay = document.getElementById('auth-overlay');
       const adminNav = document.getElementById('nav-admin');
-      const userDisplay = document.getElementById('active-user-display');
-      const roleBadge = document.getElementById('role-indicator-badge');
 
-      if (username) {
-        overlay.classList.add('hidden');
-        userDisplay.innerText = username;
-        
-        const currentUser = AppState.users.find(u => u.username === username);
-        const role = currentUser ? currentUser.role : 'Developer';
-        roleBadge.innerText = role;
-
-        if (isCurrentUserAdmin()) {
-          adminNav.classList.remove('hidden');
-        } else {
-          adminNav.classList.add('hidden');
-        }
-        syncAdminPermissionsUI();
-      } else {
+      if (!user) {
         overlay.classList.remove('hidden');
         adminNav.classList.add('hidden');
+        return;
+      }
+
+      overlay.classList.add('hidden');
+      document.getElementById('sidebar-user-name').innerText = user.username;
+      document.getElementById('sidebar-user-role').innerText = user.role;
+      document.getElementById('role-indicator-badge').innerText = user.role === 'Administrator' ? 'Admin' : user.role.slice(0, 4);
+      document.getElementById('user-avatar-initial').innerText = user.username[0]?.toUpperCase() || 'U';
+      document.getElementById('dash-greeting').innerText = `Hello, ${user.username}!`;
+
+      if (user.username === 'atlantis8998' || user.role === 'Administrator') {
+        adminNav.classList.remove('hidden');
+      } else {
+        adminNav.classList.add('hidden');
+        if (AppState.activeTab === 'admin') switchTab('tasks');
       }
     }
 
-    async function handleLogin(e) {
-      if (e && e.preventDefault) e.preventDefault();
+    function handleLoginSubmit(e) {
+      e.preventDefault();
       const u = document.getElementById('login-username').value.trim();
       const p = document.getElementById('login-password').value.trim();
-      const errBox = document.getElementById('login-error');
+      const errBox = document.getElementById('login-error-banner');
 
-      let matched = AppState.users.find(user => user.username === u && user.password === p);
-
-      if (matched) {
-        sessionStorage.setItem(AUTH_SESSION_KEY, matched.username);
-        if (errBox) errBox.classList.add('hidden');
-        checkAuth();
-        validateActiveProjectAccess();
+      const found = AppState.users.find(acc => acc.username === u && acc.password === p);
+      if (found) {
+        sessionStorage.setItem(SESSION_KEY, found.username);
+        errBox.classList.add('hidden');
+        ensureActiveProjectValid();
+        verifyAuth();
+        showToast(`Welcome back, ${found.username}!`, 'success');
         renderProjectsSidebar();
         syncProjectHeader();
         renderTasksFeed();
         renderDashboardMetrics();
+        renderChatMessages();
       } else {
-        if (errBox) errBox.classList.remove('hidden');
+        errBox.classList.remove('hidden');
+        showToast('Invalid login credentials', 'error');
       }
-      return false;
     }
 
     function handleLogout() {
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
-      sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
-      location.reload();
-    }
-
-    // Ensure non-admins are never left viewing a Staff Project
-    function validateActiveProjectAccess() {
-      const current = getCurrentProject();
-      if (!isCurrentUserAdmin() && current && current.isStaff) {
-        const fallback = getVisibleProjects()[0] || AppState.projects[0];
-        AppState.activeProjectId = fallback ? fallback.id : 'proj-1';
-        saveWorkspace();
-      }
-    }
-
-    function getVisibleProjects() {
-      const isAdmin = isCurrentUserAdmin();
-      return AppState.projects.filter(p => isAdmin || !p.isStaff);
-    }
-
-    // -------------------------------------------------------------
-    // TASK DETAIL VIEW & EDITING (ADMIN-ONLY ASSIGNMENT LOCK)
-    // -------------------------------------------------------------
-    function openTaskDetailModal(taskId) {
-      const task = AppState.tasks.find(t => t.id === taskId);
-      if (!task) return;
-      activeTaskDetailId = taskId;
-      const isAdmin = isCurrentUserAdmin();
-
-      const proj = getCurrentProject();
-      document.getElementById('detail-project-name').innerText = proj.name;
-      document.getElementById('detail-task-title').value = task.title;
-      document.getElementById('detail-task-desc').value = task.description || '';
-      document.getElementById('detail-task-status').value = task.status;
-      document.getElementById('detail-task-priority').value = task.priority;
-      document.getElementById('detail-task-points').value = task.points;
-      document.getElementById('detail-task-type').value = task.type;
-
-      // Populate assignees
-      const assigneeSelect = document.getElementById('detail-task-assignee');
-      let assigneeOptions = `<option value="Unassigned">Unassigned</option>`;
-      AppState.users.forEach(u => {
-        assigneeOptions += `<option value="${escapeHtml(u.username)}" ${task.assignee === u.username ? 'selected' : ''}>${escapeHtml(u.username)}</option>`;
+      showConfirmModal('Sign Out', 'Are you sure you want to log out of your session?', () => {
+        sessionStorage.removeItem(SESSION_KEY);
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+        verifyAuth();
+        showToast('You have been signed out.', 'info');
       });
-      assigneeSelect.innerHTML = assigneeOptions;
-
-      // Restrict assignment dropdown in detail view to Admins only
-      if (!isAdmin) {
-        assigneeSelect.disabled = true;
-        assigneeSelect.classList.add('opacity-50', 'cursor-not-allowed');
-        assigneeSelect.title = "Only workspace administrators can assign tasks.";
-      } else {
-        assigneeSelect.disabled = false;
-        assigneeSelect.classList.remove('opacity-50', 'cursor-not-allowed');
-        assigneeSelect.title = "";
-      }
-
-      // Populate sprints
-      const sprintSelect = document.getElementById('detail-task-sprint');
-      let sprintOptions = `<option value="No Sprint">No Sprint</option>`;
-      if (proj.sprints) {
-        proj.sprints.forEach(sp => {
-          sprintOptions += `<option value="${escapeHtml(sp.name)}" ${task.sprint === sp.name ? 'selected' : ''}>${escapeHtml(sp.name)}</option>`;
-        });
-      }
-      sprintSelect.innerHTML = sprintOptions;
-
-      // Restrict deletion in modal to Admins only
-      const deleteZone = document.getElementById('detail-admin-delete-zone');
-      if (isAdmin) {
-        deleteZone.innerHTML = `
-          <button onclick="deleteTaskFromDetail('${task.id}')" class="px-3.5 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 text-xs font-semibold rounded-lg transition cursor-pointer">
-            Delete Task
-          </button>
-        `;
-      } else {
-        deleteZone.innerHTML = `<span class="text-[11px] text-zinc-600 italic">Admin permissions required for deletion</span>`;
-      }
-
-      document.getElementById('modal-task-detail').classList.remove('hidden');
     }
 
-    function closeTaskDetailModal() {
-      document.getElementById('modal-task-detail').classList.add('hidden');
-      activeTaskDetailId = null;
+    // ------------------------------------------------------------------
+    // APPLICATION LIFECYCLE & SUPABASE PULL
+    // ------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (!AppState.users.some(u => u.username === 'atlantis8998')) {
+        AppState.users.unshift({ username: 'atlantis8998', password: 'StringsandKeys16', role: 'Administrator' });
+      }
+
+      await syncFromSupabase();
+      ensureActiveProjectValid();
+      verifyAuth();
+      renderProjectsSidebar();
+      syncProjectHeader();
+      renderTasksFeed();
+      renderDashboardMetrics();
+      renderProjectMembers();
+      renderAdminHub();
+      renderChatMessages();
+    });
+
+    async function syncFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const { data: dbProjects, error: pErr } = await supabaseClient.from('projects').select('*');
+        if (!pErr && dbProjects && dbProjects.length > 0) {
+          AppState.projects = dbProjects.map(p => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || '',
+            color: p.color || '#3b82f6',
+            leadDeveloper: p.lead_developer || p.members?.[0] || 'atlantis8998',
+            members: Array.isArray(p.members) ? p.members : ['atlantis8998'],
+            sprints: p.sprints || []
+          }));
+        }
+
+        const { data: dbTasks, error: tErr } = await supabaseClient.from('tasks').select('*');
+        if (!tErr && dbTasks) {
+          AppState.tasks = dbTasks.map(t => ({
+            id: t.id,
+            projectId: t.project_id,
+            title: t.title,
+            description: t.description || '',
+            status: t.status,
+            points: t.points,
+            priority: t.priority,
+            type: t.type,
+            assignee: t.assignee,
+            sprint: t.sprint
+          }));
+        }
+        saveState();
+      } catch (err) {
+        console.warn('Supabase sync skipped/failed, using local fallback:', err);
+      }
     }
 
-    async function updateActiveTaskField(field, value) {
-      if (!activeTaskDetailId) return;
-      
-      if (field === 'assignee' && !isCurrentUserAdmin()) {
-        alert("Action Denied: Only administrators have permission to assign tasks.");
+    function getCurrentProject() {
+      return AppState.projects.find(p => p.id === AppState.activeProjectId) || null;
+    }
+
+    function syncProjectHeader() {
+      const project = getCurrentProject();
+      const deleteBtn = document.getElementById('btn-delete-project');
+      const leadBadge = document.getElementById('current-project-lead-badge');
+      const addMemberRow = document.getElementById('add-member-form-row');
+      const memberNotice = document.getElementById('project-members-perm-notice');
+
+      if (!project) {
+        document.getElementById('current-project-label').innerText = 'No Project Selected';
+        document.getElementById('modal-project-badge').innerText = 'None';
+        if (leadBadge) leadBadge.innerText = 'Lead: None';
         return;
       }
 
-      const task = AppState.tasks.find(t => t.id === activeTaskDetailId);
-      if (!task) return;
+      document.getElementById('current-project-label').innerText = project.name;
+      document.getElementById('modal-project-badge').innerText = project.name;
+      document.getElementById('setting-project-name').value = project.name;
+      document.getElementById('setting-project-desc').value = project.description || '';
+      document.getElementById('setting-project-color').value = project.color || '#ffbe0b';
+      document.getElementById('setting-color-label').innerText = (project.color || '#ffbe0b').toUpperCase();
 
-      task[field] = value;
-      saveWorkspace();
-      renderTasksFeed();
-      renderDashboardMetrics();
+      if (leadBadge) {
+        leadBadge.innerText = `Lead: ${project.leadDeveloper || 'Unassigned'}`;
+      }
 
-      if (supabaseClient) {
-        try {
-          const updatePayload = {};
-          updatePayload[field] = value;
-          await supabaseClient.from('tasks').update(updatePayload).eq('id', activeTaskDetailId);
-        } catch(e) {
-          console.error("Failed to update task field in Supabase:", e);
+      const hasLeadPrivilege = isCurrentUserProjectLead(project);
+
+      if (deleteBtn) {
+        if (hasLeadPrivilege) {
+          deleteBtn.classList.remove('hidden');
+          deleteBtn.disabled = false;
+        } else {
+          deleteBtn.classList.add('hidden');
+          deleteBtn.disabled = true;
+        }
+      }
+
+      if (addMemberRow) {
+        if (hasLeadPrivilege) {
+          addMemberRow.classList.remove('hidden');
+          memberNotice.innerText = 'Add or remove developers from this project.';
+        } else {
+          addMemberRow.classList.add('hidden');
+          memberNotice.innerText = 'Only the Project Lead can modify members.';
         }
       }
     }
 
-    async function deleteTaskFromDetail(taskId) {
-      if (!isCurrentUserAdmin()) {
-        alert("Action Denied: Only workspace administrators can delete tasks.");
-        return;
+    function switchTab(tabId) {
+      AppState.activeTab = tabId;
+      ['tasks', 'dashboard', 'settings', 'admin', 'chat'].forEach(id => {
+        const v = document.getElementById(`view-${id}`);
+        if (v) v.classList.add('hidden');
+        const navBtn = document.getElementById(`nav-${id}`);
+        if (navBtn) {
+          navBtn.classList.remove('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
+          navBtn.classList.add('text-zinc-400');
+        }
+      });
+
+      const activeView = document.getElementById(`view-${tabId}`);
+      if (activeView) activeView.classList.remove('hidden');
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-zinc-400');
+        activeNav.classList.add('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
       }
-      closeTaskDetailModal();
-      await deleteTask(taskId);
+
+      if (tabId === 'dashboard') renderDashboardMetrics();
+      if (tabId === 'settings') { syncProjectHeader(); renderProjectMembers(); }
+      if (tabId === 'admin') renderAdminHub();
+      if (tabId === 'chat') renderChatMessages();
     }
 
-    // -------------------------------------------------------------
-    // TASKS ENGINE & PERMISSION-GATED FEED
-    // -------------------------------------------------------------
+    function selectProject(projId) {
+      AppState.activeProjectId = projId;
+      saveState();
+      syncProjectHeader();
+      renderProjectsSidebar();
+      renderTasksFeed();
+      renderDashboardMetrics();
+      renderProjectMembers();
+      renderChatMessages();
+    }
+
+    function renderProjectsSidebar() {
+      const list = document.getElementById('project-list');
+      const visibleProjects = getVisibleProjects();
+      const currentUser = getCurrentUser();
+
+      if (visibleProjects.length === 0) {
+        list.innerHTML = `<div class="px-3 py-2 text-xs text-zinc-600 italic">No assigned projects</div>`;
+        return;
+      }
+
+      list.innerHTML = visibleProjects.map(proj => {
+        const isSelected = proj.id === AppState.activeProjectId;
+        const isLead = currentUser && proj.leadDeveloper === currentUser.username;
+        return `
+          <div onclick="selectProject('${proj.id}')" class="flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${isSelected ? 'bg-[#18191f] text-white' : 'text-zinc-400 hover:bg-[#141519] hover:text-zinc-200'}">
+            <span class="truncate">${escapeHtml(proj.name)}</span>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              ${isLead ? '<span class="text-[10px] text-amber-400 font-bold" title="Lead Developer">★</span>' : ''}
+              <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${proj.color};"></span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ------------------------------------------------------------------
+    // ON-SITE SPRINT CREATION
+    // ------------------------------------------------------------------
+    function openSprintModal() {
+      const proj = getCurrentProject();
+      if (!proj) return;
+      document.getElementById('sprint-modal-desc').innerText = `Add a scheduled sprint to project "${proj.name}":`;
+      document.getElementById('sprint-input-name').value = `Sprint ${proj.sprints.length + 1} [Cycle Check-in]`;
+      document.getElementById('modal-create-sprint').classList.remove('hidden');
+      document.getElementById('sprint-input-name').focus();
+    }
+
+    function closeSprintModal() {
+      document.getElementById('modal-create-sprint').classList.add('hidden');
+    }
+
+    async function submitSprintCreation() {
+      const name = document.getElementById('sprint-input-name').value.trim();
+      const duration = document.getElementById('sprint-input-duration').value;
+      if (!name) return;
+
+      const proj = getCurrentProject();
+      proj.sprints.push({ id: 'sp-' + Date.now(), name: name, duration: duration });
+      saveState();
+
+      if (supabaseClient) {
+        await supabaseClient.from('projects').update({ sprints: proj.sprints }).eq('id', proj.id);
+      }
+
+      closeSprintModal();
+      renderDashboardMetrics();
+      showToast(`Sprint "${name}" created on-site!`, 'success');
+    }
+
+    // ------------------------------------------------------------------
+    // ON-SITE PROJECT CREATION (Creator becomes Lead Developer)
+    // ------------------------------------------------------------------
+    function openProjectModal() {
+      document.getElementById('modal-create-project').classList.remove('hidden');
+      document.getElementById('project-input-name').value = '';
+      document.getElementById('project-input-name').focus();
+    }
+
+    function closeProjectModal() {
+      document.getElementById('modal-create-project').classList.add('hidden');
+    }
+
+    async function submitProjectCreation() {
+      const name = document.getElementById('project-input-name').value.trim();
+      const color = document.getElementById('project-input-color').value;
+      const duration = document.getElementById('project-input-duration').value;
+      if (!name) return;
+
+      const user = getCurrentUser();
+      const currentUsername = user ? user.username : 'atlantis8998';
+
+      const newProj = {
+        id: 'proj-' + Date.now(),
+        name: name,
+        description: '',
+        color: color,
+        leadDeveloper: currentUsername, // Creator is the Lead Developer
+        members: [currentUsername],     // Creator is initial member
+        sprints: [{ id: 'sp-' + Date.now(), name: `Cycle 1 (${duration})`, duration: duration }]
+      };
+
+      AppState.projects.push(newProj);
+      AppState.activeProjectId = newProj.id;
+      saveState();
+
+      if (supabaseClient) {
+        await supabaseClient.from('projects').insert({
+          id: newProj.id,
+          name: newProj.name,
+          description: newProj.description,
+          color: newProj.color,
+          lead_developer: newProj.leadDeveloper,
+          members: newProj.members,
+          sprints: newProj.sprints
+        });
+      }
+
+      closeProjectModal();
+      syncProjectHeader();
+      renderProjectsSidebar();
+      renderTasksFeed();
+      renderDashboardMetrics();
+      renderProjectMembers();
+      renderChatMessages();
+      showToast(`Project "${name}" created! You are designated Lead Developer.`, 'success');
+    }
+
+    // ------------------------------------------------------------------
+    // GROUPING, FILTERING & TASKS
+    // ------------------------------------------------------------------
+    function toggleGroupingMenu() {
+      document.getElementById('menu-grouping').classList.toggle('hidden');
+    }
+
+    function setGrouping(mode) {
+      AppState.groupingMode = mode;
+      saveState();
+      document.getElementById('menu-grouping').classList.add('hidden');
+      const labels = {
+        none: 'Group',
+        status: 'Group [Status]',
+        priority: 'Group [Priority]',
+        type: 'Group [Type]',
+        assignee: 'Group [Assignee]',
+        sprint: 'Group [Sprint]'
+      };
+      document.getElementById('group-active-label').innerText = labels[mode] || 'Group';
+      renderTasksFeed();
+    }
+
+    function setFilter(filter) {
+      AppState.activeFilter = filter;
+      saveState();
+      ['all', 'me', 'current', 'backlog'].forEach(f => {
+        const btn = document.getElementById(`filter-${f}`);
+        btn.classList.remove('bg-[#22242c]', 'text-white');
+        btn.classList.add('text-zinc-400');
+      });
+      const activeBtn = document.getElementById(`filter-${filter}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-zinc-400');
+        activeBtn.classList.add('bg-[#22242c]', 'text-white');
+      }
+      renderTasksFeed();
+    }
+
+    let searchQuery = '';
+    function handleSearch(val) {
+      searchQuery = val.toLowerCase().trim();
+      renderTasksFeed();
+    }
+
     function renderTasksFeed() {
       const container = document.getElementById('tasks-container');
-      const activeProj = getCurrentProject();
+      const currentProj = getCurrentProject();
 
-      // Guard: Non-admins cannot see tasks from a staff project
-      if (!isCurrentUserAdmin() && activeProj && activeProj.isStaff) {
+      if (!currentProj) {
         container.innerHTML = `
-          <div class="border border-indigo-900/40 bg-[#12131b] rounded-xl p-8 text-center space-y-2 max-w-xl mx-auto my-12">
-            <div class="text-sm font-bold text-indigo-400">🔒 Restricted Project</div>
-            <p class="text-xs text-zinc-500">This workspace is accessible exclusively to administrators.</p>
+          <div class="border border-[#22242b] bg-[#121316] rounded-xl p-8 text-center text-zinc-500 max-w-xl mx-auto my-12 text-xs">
+            No project selected or you are not a member of any project.
           </div>
         `;
         return;
       }
 
-      let filtered = AppState.tasks.filter(t => t.projectId === AppState.activeProjectId);
+      let filtered = AppState.tasks.filter(t => t.projectId === currentProj.id);
 
       if (searchQuery) {
         filtered = filtered.filter(t => t.title.toLowerCase().includes(searchQuery) || (t.description && t.description.toLowerCase().includes(searchQuery)));
+      }
+
+      const user = getCurrentUser();
+      if (AppState.activeFilter === 'me' && user) {
+        filtered = filtered.filter(t => t.assignee === user.username);
+      } else if (AppState.activeFilter === 'backlog') {
+        filtered = filtered.filter(t => t.status === 'Backlog');
+      } else if (AppState.activeFilter === 'current') {
+        filtered = filtered.filter(t => t.status === 'In Progress' || t.status === 'In Review');
       }
 
       if (filtered.length === 0) {
@@ -1038,14 +1318,14 @@
               <span class="w-4 h-4 rounded-full border border-zinc-500 flex items-center justify-center text-[10px]">i</span>
               <span>This project doesn't have any tasks yet.</span>
             </div>
-            <p class="text-xs text-zinc-500 pl-6">Please create a task to get started.</p>
+            <p class="text-xs text-zinc-500 pl-6">Click "+ Add Task" above to get started.</p>
           </div>
         `;
         return;
       }
 
       if (AppState.groupingMode === 'none') {
-        container.innerHTML = `<div class="space-y-1">${filtered.map(task => renderTaskRow(task)).join('')}</div>`;
+        container.innerHTML = `<div class="space-y-1">${filtered.map(t => renderTaskRow(t)).join('')}</div>`;
       } else {
         const groups = getGroupBuckets(AppState.groupingMode);
         container.innerHTML = groups.map(group => {
@@ -1058,12 +1338,10 @@
                   <span>${group.name} - ${groupTasks.length}</span>
                   <span class="text-zinc-600">⬡</span>
                 </div>
-                <button onclick="openCreateTaskModal('${group.targetField}', '${group.targetValue}')" class="text-zinc-500 hover:text-zinc-300 text-xs cursor-pointer">+</button>
+                <button onclick="openCreateTaskModal('${group.targetField}', '${group.targetValue}')" class="text-zinc-500 hover:text-zinc-300 text-xs">+</button>
               </div>
               <div class="space-y-1">
-                ${groupTasks.length > 0 
-                  ? groupTasks.map(task => renderTaskRow(task)).join('') 
-                  : '<div class="text-[11px] text-zinc-600 pl-6 py-1">No tasks</div>'}
+                ${groupTasks.length > 0 ? groupTasks.map(t => renderTaskRow(t)).join('') : '<div class="text-[11px] text-zinc-600 pl-6 py-1">No tasks</div>'}
               </div>
             </div>
           `;
@@ -1074,24 +1352,21 @@
     function renderTaskRow(task) {
       const statusIcon = getStatusIcon(task.status);
       const pointsNum = task.points ? task.points.split(' ')[0] : '1';
-      const isAdmin = isCurrentUserAdmin();
+      const canDelete = isCurrentUserAdmin();
 
       return `
-        <div onclick="openTaskDetailModal('${task.id}')" class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] hover:bg-[#16171d] rounded-xl px-4 py-2.5 flex items-center justify-between gap-4 transition group cursor-pointer">
+        <div onclick="openTaskDetailDrawer('${task.id}')" class="bg-[#131418] border border-[#20222a] hover:border-[#2d303b] rounded-xl px-4 py-2 flex items-center justify-between gap-4 transition group cursor-pointer">
           <div class="flex items-center gap-3">
-            <button onclick="event.stopPropagation(); cycleTaskStatus('${task.id}')" title="Cycle Status" class="text-xs ${statusIcon.color} cursor-pointer">${statusIcon.icon}</button>
+            <button onclick="event.stopPropagation(); cycleTaskStatus('${task.id}')" title="Cycle Status" class="text-xs ${statusIcon.color}">${statusIcon.icon}</button>
             <span class="text-[10px] font-mono border border-[#2b2e38] bg-[#1a1b22] px-1.5 py-0.5 rounded text-zinc-400">${pointsNum === 'No' ? '0' : pointsNum}</span>
-            <span class="text-xs font-medium text-white group-hover:text-blue-400 transition">${escapeHtml(task.title)}</span>
+            <span class="text-xs font-medium text-white">${escapeHtml(task.title)}</span>
           </div>
 
           <div class="flex items-center gap-3">
-            <span class="text-[11px] px-2 py-0.5 rounded bg-[#181920] border border-[#252732] text-zinc-300">⊞ ${task.type || 'Task'}</span>
-            <span class="text-[11px] text-zinc-400">👤 ${escapeHtml(task.assignee || 'Unassigned')}</span>
+            <span class="text-[11px] px-2 py-0.5 rounded bg-[#181920] border border-[#252732] text-zinc-300">⊞ ${task.type}</span>
+            <span class="text-[11px] text-zinc-400" title="Assignee: ${escapeHtml(task.assignee)}">👤 <span class="hidden md:inline">${escapeHtml(task.assignee)}</span></span>
             ${task.sprint && task.sprint !== 'No Sprint' ? `<span class="text-[10px] text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-1.5 py-0.5 rounded">◯ ${escapeHtml(task.sprint.split(' ')[0])}</span>` : ''}
-            
-            ${isAdmin ? `
-              <button onclick="event.stopPropagation(); deleteTask('${task.id}')" title="Delete Task (Admin Only)" class="text-zinc-600 hover:text-rose-400 text-xs ml-1 cursor-pointer">✕</button>
-            ` : ''}
+            ${canDelete ? `<button onclick="event.stopPropagation(); promptDeleteTask('${task.id}')" title="Delete Task" class="text-zinc-600 hover:text-rose-400 text-xs">✕</button>` : ''}
           </div>
         </div>
       `;
@@ -1113,412 +1388,39 @@
       const order = ['Backlog', 'To Do', 'In Progress', 'In Review', 'Done'];
       const nextIndex = (order.indexOf(task.status) + 1) % order.length;
       task.status = order[nextIndex];
-      saveWorkspace();
-      renderTasksFeed();
-      renderDashboardMetrics();
+      saveState();
 
       if (supabaseClient) {
-        try {
-          await supabaseClient.from('tasks').update({ status: task.status }).eq('id', taskId);
-        } catch(e) {}
+        await supabaseClient.from('tasks').update({ status: task.status }).eq('id', task.id);
       }
-    }
 
-    async function deleteTask(taskId) {
-      if (!isCurrentUserAdmin()) {
-        alert("Action Denied: Only administrators have permission to delete tasks.");
-        return;
-      }
-      AppState.tasks = AppState.tasks.filter(t => t.id !== taskId);
-      saveWorkspace();
       renderTasksFeed();
       renderDashboardMetrics();
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('tasks').delete().eq('id', taskId);
-        } catch(e) {}
-      }
     }
 
-    // -------------------------------------------------------------
-    // PROJECT MANAGEMENT & ADMIN RESTRICTIONS
-    // -------------------------------------------------------------
-    async function deleteCurrentProject() {
+    function promptDeleteTask(taskId) {
       if (!isCurrentUserAdmin()) {
-        alert("Action Denied: Only administrators have permission to delete projects.");
+        showToast('Only Admins can delete tasks.', 'error');
         return;
       }
-
-      if (AppState.projects.length <= 1) {
-        alert('You must have at least one active project.');
-        return;
-      }
-
-      const proj = getCurrentProject();
-      if (confirm(`Are you sure you want to permanently delete project "${proj.name}"?`)) {
-        AppState.tasks = AppState.tasks.filter(t => t.projectId !== AppState.activeProjectId);
-        AppState.projects = AppState.projects.filter(p => p.id !== AppState.activeProjectId);
-        AppState.activeProjectId = AppState.projects[0].id;
-        saveWorkspace();
+      showConfirmModal('Delete Task', 'Remove this task from the board?', async () => {
+        AppState.tasks = AppState.tasks.filter(t => t.id !== taskId);
+        saveState();
 
         if (supabaseClient) {
-          try {
-            await supabaseClient.from('projects').delete().eq('id', proj.id);
-          } catch(e) {}
+          await supabaseClient.from('tasks').delete().eq('id', taskId);
         }
 
-        validateActiveProjectAccess();
-        syncProjectHeader();
-        renderProjectsSidebar();
         renderTasksFeed();
         renderDashboardMetrics();
-      }
-    }
-
-    // -------------------------------------------------------------
-    // PASSCODE VERIFICATION (0107) & ADMIN HUB
-    // -------------------------------------------------------------
-    function arePasswordsRevealed() {
-      return sessionStorage.getItem(PASSWORDS_REVEALED_KEY) === 'true';
-    }
-
-    function openPasscodeModal() {
-      document.getElementById('modal-passcode-gate').classList.remove('hidden');
-      document.getElementById('admin-passcode-input').value = '';
-      document.getElementById('passcode-error').classList.add('hidden');
-      document.getElementById('admin-passcode-input').focus();
-    }
-
-    function closePasscodeModal() {
-      document.getElementById('modal-passcode-gate').classList.add('hidden');
-    }
-
-    function handlePasscodeSubmit(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      const code = document.getElementById('admin-passcode-input').value.trim();
-      if (code === MASTER_PIN) {
-        sessionStorage.setItem(PASSWORDS_REVEALED_KEY, 'true');
-        closePasscodeModal();
-        updatePasswordVisibilityUI();
-        renderAdminUsers();
-      } else {
-        document.getElementById('passcode-error').classList.remove('hidden');
-      }
-    }
-
-    function hidePasswords() {
-      sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
-      updatePasswordVisibilityUI();
-      renderAdminUsers();
-    }
-
-    function updatePasswordVisibilityUI() {
-      const showBtn = document.getElementById('btn-show-passwords');
-      const hideBtn = document.getElementById('btn-hide-passwords');
-      if (arePasswordsRevealed()) {
-        showBtn.classList.add('hidden');
-        hideBtn.classList.remove('hidden');
-      } else {
-        showBtn.classList.remove('hidden');
-        hideBtn.classList.add('hidden');
-      }
-    }
-
-    async function handleCreateUser(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      const username = document.getElementById('new-user-username').value.trim();
-      const password = document.getElementById('new-user-password').value.trim();
-      const role = document.getElementById('new-user-role').value;
-
-      if (!username || !password) return;
-
-      if (AppState.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-        alert('A user with that username already exists.');
-        return;
-      }
-
-      const newUser = {
-        username: username,
-        password: password,
-        role: role,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-
-      AppState.users.push(newUser);
-      saveWorkspace();
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('users').upsert({ username, password, role });
-        } catch (e) {}
-      }
-
-      document.getElementById('new-user-username').value = '';
-      document.getElementById('new-user-password').value = '';
-      renderAdminUsers();
-    }
-
-    async function deleteUser(username) {
-      if (username === 'atlantis8998') {
-        alert('Cannot delete the root administrator account.');
-        return;
-      }
-      if (confirm(`Are you sure you want to delete login "${username}"?`)) {
-        AppState.users = AppState.users.filter(u => u.username !== username);
-        saveWorkspace();
-        if (supabaseClient) {
-          try {
-            await supabaseClient.from('users').delete().eq('username', username);
-          } catch(e) {}
-        }
-        renderAdminUsers();
-      }
-    }
-
-    function renderAdminUsers() {
-      const container = document.getElementById('admin-user-list');
-      const countDisplay = document.getElementById('user-count-display');
-      if (!container) return;
-
-      countDisplay.innerText = `${AppState.users.length} Users`;
-      const isRevealed = arePasswordsRevealed();
-
-      container.innerHTML = AppState.users.map(u => {
-        const displayPassword = isRevealed ? escapeHtml(u.password) : '••••••••';
-        return `
-          <div class="p-4 flex items-center justify-between text-xs hover:bg-[#16171d] transition">
-            <div class="flex items-center gap-3">
-              <span class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-zinc-200">
-                ${u.username[0].toUpperCase()}
-              </span>
-              <div>
-                <div class="font-bold text-white flex items-center gap-2">
-                  <span>${escapeHtml(u.username)}</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded font-normal ${
-                    u.role === 'Admin' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                  }">${u.role}</span>
-                </div>
-                <div class="text-[11px] text-zinc-500 font-mono mt-0.5">
-                  Password: <span class="${isRevealed ? 'text-amber-300 font-semibold' : 'text-zinc-600'}">${displayPassword}</span> | Added: ${u.createdAt || 'Active'}
-                </div>
-              </div>
-            </div>
-            <div>
-              ${u.username !== 'atlantis8998' ? `
-                <button onclick="deleteUser('${escapeHtml(u.username)}')" class="px-2.5 py-1 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded transition text-xs cursor-pointer">
-                  Delete
-                </button>
-              ` : '<span class="text-xs text-zinc-600 italic">Root Admin</span>'}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // -------------------------------------------------------------
-    // NAVIGATION & PROJECTS
-    // -------------------------------------------------------------
-    function switchTab(tabId) {
-      ['tasks', 'dashboard', 'settings', 'admin'].forEach(id => {
-        const view = document.getElementById(`view-${id}`);
-        if (view) view.classList.add('hidden');
-        const navBtn = document.getElementById(`nav-${id}`);
-        if (navBtn) {
-          navBtn.classList.remove('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
-          navBtn.classList.add('text-zinc-400');
-        }
+        showToast('Task removed', 'info');
       });
-
-      const targetView = document.getElementById(`view-${tabId}`);
-      if (targetView) targetView.classList.remove('hidden');
-
-      const activeNav = document.getElementById(`nav-${tabId}`);
-      if (activeNav) {
-        activeNav.classList.remove('text-zinc-400');
-        activeNav.classList.add('bg-[#1a1c22]', 'text-white', 'border-l-2', 'border-white');
-      }
-
-      if (tabId === 'dashboard') renderDashboardMetrics();
-      if (tabId === 'settings') {
-        syncProjectHeader();
-        syncAdminPermissionsUI();
-      }
-      if (tabId === 'admin') {
-        renderAdminUsers();
-        updatePasswordVisibilityUI();
-      }
-    }
-
-    function getCurrentProject() {
-      const visible = getVisibleProjects();
-      return visible.find(p => p.id === AppState.activeProjectId) || visible[0] || AppState.projects[0];
-    }
-
-    function selectProject(projId) {
-      const proj = AppState.projects.find(p => p.id === projId);
-      if (proj && proj.isStaff && !isCurrentUserAdmin()) {
-        alert("Access Denied: This staff project is restricted to administrators.");
-        return;
-      }
-
-      AppState.activeProjectId = projId;
-      saveWorkspace();
-      syncProjectHeader();
-      renderProjectsSidebar();
-      renderTasksFeed();
-      renderDashboardMetrics();
-    }
-
-    function syncProjectHeader() {
-      const project = getCurrentProject();
-      if (!project) return;
-      document.getElementById('current-project-label').innerText = project.name;
-      document.getElementById('modal-project-badge').innerText = project.name;
-      document.getElementById('sprint-cycle-badge').innerText = `${project.sprintDuration || '2 Weeks'} Cycles`;
-      
-      const staffPill = document.getElementById('current-project-staff-pill');
-      if (staffPill) {
-        if (project.isStaff) staffPill.classList.remove('hidden');
-        else staffPill.classList.add('hidden');
-      }
-
-      const settingName = document.getElementById('setting-project-name');
-      if (settingName) settingName.value = project.name;
-
-      const settingDuration = document.getElementById('setting-project-duration');
-      if (settingDuration) settingDuration.value = project.sprintDuration || '2 Weeks';
-
-      const settingDesc = document.getElementById('setting-project-desc');
-      if (settingDesc) settingDesc.value = project.description || '';
-
-      const settingColor = document.getElementById('setting-project-color');
-      if (settingColor) settingColor.value = project.color || '#ffbe0b';
-
-      const colorLabel = document.getElementById('setting-color-label');
-      if (colorLabel) colorLabel.innerText = (project.color || '#ffbe0b').toUpperCase();
-    }
-
-    function renderProjectsSidebar() {
-      const list = document.getElementById('project-list');
-      const visibleProjects = getVisibleProjects();
-
-      list.innerHTML = visibleProjects.map(proj => {
-        const isSelected = proj.id === AppState.activeProjectId;
-        return `
-          <div onclick="selectProject('${proj.id}')" class="flex items-center justify-between px-3 py-1.5 rounded-lg cursor-pointer text-xs font-medium ${isSelected ? 'bg-[#18191f] text-white' : 'text-zinc-400 hover:bg-[#141519] hover:text-zinc-200'}">
-            <div class="flex items-center gap-2 truncate">
-              <span class="truncate">${escapeHtml(proj.name)}</span>
-              ${proj.isStaff ? `<span class="text-[9px] text-indigo-400 bg-indigo-950/60 border border-indigo-700/50 px-1 py-0.2 rounded font-bold shrink-0">🔒 STAFF</span>` : ''}
-            </div>
-            <span class="w-2 h-2 rounded-full shrink-0 ml-2" style="background-color: ${proj.color};"></span>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function openCreateProjectModal() {
-      document.getElementById('modal-create-project').classList.remove('hidden');
-      document.getElementById('new-project-name').value = '';
-      
-      // Control Staff Project option visibility
-      const staffToggleContainer = document.getElementById('staff-project-toggle-container');
-      const staffCheckbox = document.getElementById('new-project-is-staff');
-      if (isCurrentUserAdmin()) {
-        staffToggleContainer.classList.remove('hidden');
-        staffCheckbox.checked = false;
-      } else {
-        staffToggleContainer.classList.add('hidden');
-        staffCheckbox.checked = false;
-      }
-
-      document.getElementById('new-project-name').focus();
-    }
-
-    function closeCreateProjectModal() {
-      document.getElementById('modal-create-project').classList.add('hidden');
-    }
-
-    async function handleCreateProjectSubmit(e) {
-      if (e && e.preventDefault) e.preventDefault();
-      const name = document.getElementById('new-project-name').value.trim();
-      const duration = document.getElementById('new-project-duration').value;
-      const isStaffCheckbox = document.getElementById('new-project-is-staff');
-      const wantsStaff = isStaffCheckbox && isStaffCheckbox.checked;
-
-      if (!name) return;
-
-      // Only Admins can set isStaff to true
-      const isStaff = isCurrentUserAdmin() && wantsStaff;
-
-      const newProj = {
-        id: 'proj-' + Date.now(),
-        name: name,
-        sprintDuration: duration,
-        description: isStaff ? 'Confidential administrator & staff project.' : '',
-        color: isStaff ? '#6366f1' : '#3b82f6',
-        isStaff: isStaff,
-        sprints: [
-          { id: 'sp-' + Date.now(), name: `Sprint 1 [${duration} Check-in]`, duration: duration }
-        ]
-      };
-
-      AppState.projects.push(newProj);
-      AppState.activeProjectId = newProj.id;
-      saveWorkspace();
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('projects').upsert({
-            id: newProj.id,
-            name: newProj.name,
-            sprint_duration: newProj.sprintDuration,
-            description: newProj.description,
-            color: newProj.color,
-            is_staff: newProj.isStaff,
-            sprints: newProj.sprints
-          });
-        } catch(e) {}
-      }
-
-      closeCreateProjectModal();
-      syncProjectHeader();
-      renderProjectsSidebar();
-      renderTasksFeed();
-      renderDashboardMetrics();
-    }
-
-    // -------------------------------------------------------------
-    // GROUPING, SEARCH & MODAL CREATION
-    // -------------------------------------------------------------
-    function toggleGroupingMenu() {
-      document.getElementById('menu-grouping').classList.toggle('hidden');
-    }
-
-    function setGrouping(mode) {
-      AppState.groupingMode = mode;
-      saveWorkspace();
-      document.getElementById('menu-grouping').classList.add('hidden');
-      const labels = {
-        none: 'Group',
-        status: 'Group [Status]',
-        priority: 'Group [Priority]',
-        type: 'Group [Type]',
-        assignee: 'Group [Assignee]',
-        sprint: 'Group [Sprint]'
-      };
-      document.getElementById('group-active-label').innerText = labels[mode] || 'Group';
-      renderTasksFeed();
-    }
-
-    let searchQuery = '';
-    function handleSearch(val) {
-      searchQuery = val.toLowerCase().trim();
-      renderTasksFeed();
     }
 
     function getGroupBuckets(mode) {
       const activeProj = getCurrentProject();
+      if (!activeProj) return [];
+
       if (mode === 'status') {
         return [
           { name: 'Backlog', icon: '◌', targetField: 'status', targetValue: 'Backlog', match: t => t.status === 'Backlog' },
@@ -1541,41 +1443,97 @@
           { name: 'Feature', icon: '⚑', colorClass: 'text-purple-400', targetField: 'type', targetValue: 'Feature', match: t => t.type === 'Feature' },
           { name: 'Improvement', icon: '📈', colorClass: 'text-blue-400', targetField: 'type', targetValue: 'Improvement', match: t => t.type === 'Improvement' },
           { name: 'Research', icon: '🔍', colorClass: 'text-teal-400', targetField: 'type', targetValue: 'Research', match: t => t.type === 'Research' },
-          { name: 'Testing', icon: '🧪', colorClass: 'text-amber-400', targetField: 'type', targetValue: 'Testing', match: t => t.type === 'Testing' },
           { name: 'Bug', icon: '🪲', colorClass: 'text-rose-400', targetField: 'type', targetValue: 'Bug', match: t => t.type === 'Bug' }
         ];
       } else if (mode === 'assignee') {
         const buckets = [{ name: 'Unassigned', icon: '👤', targetField: 'assignee', targetValue: 'Unassigned', match: t => t.assignee === 'Unassigned' }];
-        AppState.users.forEach(u => {
-          buckets.push({
-            name: u.username,
-            icon: '👤',
-            colorClass: 'text-amber-400',
-            targetField: 'assignee',
-            targetValue: u.username,
-            match: t => t.assignee === u.username
-          });
+        activeProj.members.forEach(m => {
+          buckets.push({ name: m, icon: '👤', colorClass: 'text-amber-400', targetField: 'assignee', targetValue: m, match: t => t.assignee === m });
         });
         return buckets;
       } else if (mode === 'sprint') {
-        const sprintBuckets = [{ name: 'No Sprint', icon: '◯', targetField: 'sprint', targetValue: 'No Sprint', match: t => t.sprint === 'No Sprint' }];
-        if (activeProj && activeProj.sprints) {
-          activeProj.sprints.forEach(sp => {
-            sprintBuckets.push({
-              name: sp.name,
-              icon: '◯',
-              colorClass: 'text-cyan-400',
-              targetField: 'sprint',
-              targetValue: sp.name,
-              match: t => t.sprint === sp.name
-            });
-          });
-        }
-        return sprintBuckets;
+        const buckets = [{ name: 'No Sprint', icon: '◯', targetField: 'sprint', targetValue: 'No Sprint', match: t => t.sprint === 'No Sprint' }];
+        activeProj.sprints.forEach(sp => {
+          buckets.push({ name: sp.name, icon: '◯', colorClass: 'text-cyan-400', targetField: 'sprint', targetValue: sp.name, match: t => t.sprint === sp.name });
+        });
+        return buckets;
       }
       return [];
     }
 
+    // ------------------------------------------------------------------
+    // SLIDE-OUT TASK DETAIL DRAWER LOGIC
+    // ------------------------------------------------------------------
+    function openTaskDetailDrawer(taskId) {
+      const task = AppState.tasks.find(t => t.id === taskId);
+      const proj = getCurrentProject();
+      if (!task || !proj) return;
+
+      activeDetailTaskId = taskId;
+
+      document.getElementById('detail-task-id').innerText = task.id.replace('task-', 'TSK-');
+      document.getElementById('detail-project-name').innerText = proj.name;
+      document.getElementById('detail-task-title').value = task.title;
+      document.getElementById('detail-task-desc').value = task.description || '';
+      document.getElementById('detail-task-status').value = task.status;
+      document.getElementById('detail-task-priority').value = task.priority;
+      document.getElementById('detail-task-type').value = task.type;
+      document.getElementById('detail-task-points').value = task.points;
+
+      // Assignee dropdown
+      const aSelect = document.getElementById('detail-task-assignee');
+      aSelect.innerHTML = `<option value="Unassigned">Unassigned</option>` + proj.members.map(m => `<option value="${escapeHtml(m)}" ${task.assignee === m ? 'selected' : ''}>${escapeHtml(m)}</option>`).join('');
+
+      // Sprint dropdown
+      const sSelect = document.getElementById('detail-task-sprint');
+      sSelect.innerHTML = `<option value="No Sprint">No Sprint</option>` + proj.sprints.map(s => `<option value="${escapeHtml(s.name)}" ${task.sprint === s.name ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('');
+
+      // Delete button restriction
+      const delBtn = document.getElementById('btn-delete-detail-task');
+      if (isCurrentUserAdmin()) {
+        delBtn.classList.remove('hidden');
+      } else {
+        delBtn.classList.add('hidden');
+      }
+
+      document.getElementById('drawer-task-detail').classList.remove('hidden');
+    }
+
+    function closeTaskDetailDrawer() {
+      document.getElementById('drawer-task-detail').classList.add('hidden');
+      activeDetailTaskId = null;
+      renderTasksFeed();
+      renderDashboardMetrics();
+    }
+
+    async function updateTaskDetailField(field, val) {
+      if (!activeDetailTaskId) return;
+      const task = AppState.tasks.find(t => t.id === activeDetailTaskId);
+      if (!task) return;
+
+      task[field] = val;
+      saveState();
+
+      if (supabaseClient) {
+        const payload = {};
+        payload[field] = val;
+        await supabaseClient.from('tasks').update(payload).eq('id', task.id);
+      }
+    }
+
+    function deleteActiveDetailTask() {
+      if (!isCurrentUserAdmin()) {
+        showToast('Only Admins can delete tasks.', 'error');
+        return;
+      }
+      if (!activeDetailTaskId) return;
+      promptDeleteTask(activeDetailTaskId);
+      closeTaskDetailDrawer();
+    }
+
+    // ------------------------------------------------------------------
+    // CREATE TASK MODAL
+    // ------------------------------------------------------------------
     function openCreateTaskModal(field, val) {
       document.getElementById('modal-create-task').classList.remove('hidden');
       document.getElementById('new-task-title').focus();
@@ -1589,13 +1547,7 @@
         sprint: 'No Sprint'
       };
 
-      if (field && val) {
-        if (field === 'assignee' && !isCurrentUserAdmin()) {
-          draftTask.assignee = 'Unassigned';
-        } else {
-          draftTask[field] = val;
-        }
-      }
+      if (field && val) draftTask[field] = val;
 
       document.getElementById('label-modal-status').innerText = draftTask.status;
       document.getElementById('label-modal-points').innerText = draftTask.points;
@@ -1623,11 +1575,6 @@
     }
 
     function toggleModalMenu(attribute) {
-      if (attribute === 'assignee' && !isCurrentUserAdmin()) {
-        alert("Only workspace administrators can assign tasks.");
-        return;
-      }
-
       const menu = document.getElementById(`pop-modal-${attribute}`);
       const isHidden = menu.classList.contains('hidden');
       closeAllPopups();
@@ -1635,12 +1582,6 @@
     }
 
     function selectModalAttribute(attr, val) {
-      if (attr === 'assignee' && !isCurrentUserAdmin()) {
-        alert("Action Denied: Only administrators can assign tasks.");
-        closeAllPopups();
-        return;
-      }
-
       draftTask[attr] = val;
       document.getElementById(`label-modal-${attr}`).innerText = val;
       closeAllPopups();
@@ -1649,36 +1590,24 @@
     function renderModalSprintOptions() {
       const proj = getCurrentProject();
       const sprintPop = document.getElementById('pop-modal-sprint');
-      let html = `<button type="button" onclick="selectModalAttribute('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ No Sprint</button>`;
-      if (proj && proj.sprints) {
-        proj.sprints.forEach(sp => {
-          html += `<button type="button" onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded cursor-pointer">◯ ${escapeHtml(sp.name)}</button>`;
-        });
-      }
+      if (!proj) return;
+      let html = `<button onclick="selectModalAttribute('sprint', 'No Sprint')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ No Sprint</button>`;
+      proj.sprints.forEach(sp => {
+        html += `<button onclick="selectModalAttribute('sprint', '${escapeHtml(sp.name)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-cyan-300 hover:bg-[#20222a] rounded">◯ ${escapeHtml(sp.name)}</button>`;
+      });
       sprintPop.innerHTML = html;
     }
 
     function renderModalAssigneeOptions() {
+      const proj = getCurrentProject();
       const pop = document.getElementById('pop-modal-assignee');
-      const btn = document.getElementById('btn-modal-assignee');
-      const isAdmin = isCurrentUserAdmin();
-
-      if (!isAdmin) {
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-        btn.title = "Only workspace administrators can assign tasks";
-        pop.innerHTML = `<div class="p-2 text-[11px] text-zinc-500 italic text-center">Admin access required</div>`;
-        return;
-      }
-
-      btn.classList.remove('opacity-50', 'cursor-not-allowed');
-      btn.title = "";
-
-      let html = `<button type="button" onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded cursor-pointer">✓ Unassigned</button>`;
-      AppState.users.forEach(u => {
+      if (!proj) return;
+      let html = `<button onclick="selectModalAttribute('assignee', 'Unassigned')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-400 hover:bg-[#20222a] rounded">✓ Unassigned</button>`;
+      proj.members.forEach(m => {
         html += `
-          <button type="button" onclick="selectModalAttribute('assignee', '${escapeHtml(u.username)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded cursor-pointer">
-            <span class="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-bold">${u.username[0]?.toUpperCase()}</span>
-            <span>${escapeHtml(u.username)}</span>
+          <button onclick="selectModalAttribute('assignee', '${escapeHtml(m)}')" class="w-full flex items-center gap-2 px-2.5 py-1 text-xs text-zinc-200 hover:bg-[#20222a] rounded">
+            <span class="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center text-[9px] font-bold">${m[0]?.toUpperCase()}</span>
+            <span>${escapeHtml(m)}</span>
           </button>
         `;
       });
@@ -1687,48 +1616,49 @@
 
     async function submitNewTask() {
       const title = document.getElementById('new-task-title').value.trim();
-      if (!title) return;
-
-      if (!isCurrentUserAdmin()) {
-        draftTask.assignee = 'Unassigned';
-      }
+      const currentProj = getCurrentProject();
+      if (!title || !currentProj) return;
 
       const newTask = {
         id: 'task-' + Date.now(),
-        projectId: AppState.activeProjectId,
+        projectId: currentProj.id,
         title: title,
         description: document.getElementById('new-task-desc').value.trim(),
         ...draftTask
       };
 
       AppState.tasks.unshift(newTask);
-      saveWorkspace();
+      saveState();
+
+      if (supabaseClient) {
+        await supabaseClient.from('tasks').insert({
+          id: newTask.id,
+          project_id: newTask.projectId,
+          title: newTask.title,
+          description: newTask.description,
+          status: newTask.status,
+          points: newTask.points,
+          priority: newTask.priority,
+          type: newTask.type,
+          assignee: newTask.assignee,
+          sprint: newTask.sprint
+        });
+      }
+
       closeCreateTaskModal();
       renderTasksFeed();
       renderDashboardMetrics();
-
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('tasks').upsert({
-            id: newTask.id,
-            project_id: newTask.projectId,
-            title: newTask.title,
-            description: newTask.description,
-            status: newTask.status,
-            points: newTask.points,
-            priority: newTask.priority,
-            type: newTask.type,
-            assignee: newTask.assignee,
-            sprint: newTask.sprint
-          });
-        } catch (err) {
-          console.error("Failed to sync task to Supabase:", err);
-        }
-      }
+      showToast('Task added successfully', 'success');
     }
 
+    // ------------------------------------------------------------------
+    // DASHBOARD & METRICS
+    // ------------------------------------------------------------------
     function renderDashboardMetrics() {
-      const projTasks = AppState.tasks.filter(t => t.projectId === AppState.activeProjectId);
+      const currentProj = getCurrentProject();
+      if (!currentProj) return;
+
+      const projTasks = AppState.tasks.filter(t => t.projectId === currentProj.id);
       const backlog = projTasks.filter(t => t.status === 'Backlog').length;
       const progress = projTasks.filter(t => t.status === 'In Progress').length;
       const done = projTasks.filter(t => t.status === 'Done').length;
@@ -1751,97 +1681,415 @@
       }
 
       const sprintBox = document.getElementById('dash-sprints-list');
-      const proj = getCurrentProject();
-      if (!proj || !proj.sprints || proj.sprints.length === 0) {
-        sprintBox.innerHTML = '<div class="text-zinc-500">No active sprint cycles. Click "+ Sprint Check-in" to schedule one.</div>';
+      if (currentProj.sprints.length === 0) {
+        sprintBox.innerHTML = '<div class="text-zinc-500">No active sprints. Click "+ Sprint" to add one.</div>';
       } else {
-        sprintBox.innerHTML = proj.sprints.map(sp => {
+        sprintBox.innerHTML = currentProj.sprints.map(sp => {
           const count = projTasks.filter(t => t.sprint === sp.name).length;
           return `
-            <div class="flex items-center justify-between py-2 border-b border-[#1c1d25] text-xs">
-              <div>
-                <span class="text-cyan-400 font-medium">◯ ${escapeHtml(sp.name)}</span>
-                <span class="text-[10px] text-zinc-500 block">Interval: ${sp.duration || proj.sprintDuration || '2 Weeks'}</span>
-              </div>
-              <span class="text-zinc-400 text-xs font-mono">${count} tasks</span>
+            <div class="flex items-center justify-between py-1.5 border-b border-[#1c1d25] text-xs">
+              <span class="text-cyan-400 font-medium">◯ ${escapeHtml(sp.name)}</span>
+              <span class="text-zinc-400 text-[10px]">${count} tasks</span>
             </div>
           `;
         }).join('');
       }
     }
 
-    async function promptCreateSprint() {
+    // ------------------------------------------------------------------
+    // PROJECT SCOPED CHAT LOGIC
+    // ------------------------------------------------------------------
+    async function renderChatMessages() {
       const proj = getCurrentProject();
-      const count = (proj.sprints ? proj.sprints.length : 0) + 1;
-      const cadence = proj.sprintDuration || '2 Weeks';
-      const name = prompt(`Enter name for Sprint ${count} (Cadence: ${cadence}):`, `Sprint ${count} [${cadence} Check-in]`);
-      if (name && name.trim()) {
-        if (!proj.sprints) proj.sprints = [];
-        proj.sprints.push({ 
-          id: 'sp-' + Date.now(), 
-          name: name.trim(), 
-          duration: cadence
-        });
-        saveWorkspace();
-        if (supabaseClient) {
-          try {
-            await supabaseClient.from('projects').update({ sprints: proj.sprints }).eq('id', proj.id);
-          } catch(e) {}
-        }
-        renderDashboardMetrics();
+      const container = document.getElementById('chat-messages-container');
+      const title = document.getElementById('chat-project-title');
+      const count = document.getElementById('chat-member-count');
+
+      if (!proj) {
+        title.innerText = 'No Project Selected';
+        count.innerText = '0 members';
+        container.innerHTML = '<div class="text-zinc-600 text-center text-xs mt-12">No active project chat.</div>';
+        return;
       }
+
+      title.innerText = `${proj.name} Chat`;
+      count.innerText = `${proj.members.length} member(s): ${proj.members.join(', ')}`;
+
+      let messages = AppState.projectMessages[proj.id] || [];
+
+      // Fetch from Supabase if connected
+      if (supabaseClient) {
+        const { data: dbMessages } = await supabaseClient
+          .from('project_messages')
+          .select('*')
+          .eq('project_id', proj.id)
+          .order('created_at', { ascending: true });
+
+        if (dbMessages && dbMessages.length > 0) {
+          messages = dbMessages.map(m => ({
+            id: m.id,
+            sender: m.sender,
+            text: m.message,
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }));
+          AppState.projectMessages[proj.id] = messages;
+        }
+      }
+
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div class="text-center text-zinc-600 text-xs mt-12">
+            No messages yet in ${escapeHtml(proj.name)}. Start the conversation below!
+          </div>
+        `;
+        return;
+      }
+
+      const user = getCurrentUser();
+      const currentUsername = user ? user.username : 'atlantis8998';
+
+      container.innerHTML = messages.map(msg => {
+        const isMe = msg.sender === currentUsername;
+        return `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+            <div class="flex items-center gap-1.5 text-[10px] text-zinc-500 mb-1">
+              <span class="font-bold ${isMe ? 'text-blue-400' : 'text-amber-400'}">${escapeHtml(msg.sender)}</span>
+              <span>•</span>
+              <span>${escapeHtml(msg.time)}</span>
+            </div>
+            <div class="max-w-md px-3.5 py-2 rounded-xl text-xs ${isMe ? 'bg-blue-600 text-white rounded-br-xs' : 'bg-[#181920] border border-[#262832] text-zinc-200 rounded-bl-xs'}">
+              ${escapeHtml(msg.text)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function handleSendChatMessage(e) {
+      e.preventDefault();
+      const proj = getCurrentProject();
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+
+      if (!proj || !text) return;
+
+      const user = getCurrentUser();
+      const currentUsername = user ? user.username : 'atlantis8998';
+
+      if (!AppState.projectMessages[proj.id]) {
+        AppState.projectMessages[proj.id] = [];
+      }
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const msgObj = {
+        id: 'msg-' + Date.now(),
+        sender: currentUsername,
+        text: text,
+        time: timeStr
+      };
+
+      AppState.projectMessages[proj.id].push(msgObj);
+      saveState();
+
+      if (supabaseClient) {
+        await supabaseClient.from('project_messages').insert({
+          id: msgObj.id,
+          project_id: proj.id,
+          sender: currentUsername,
+          message: text
+        });
+      }
+
+      input.value = '';
+      renderChatMessages();
+    }
+
+    // ------------------------------------------------------------------
+    // SETTINGS & PROJECT MEMBERS (Lead Dev & Admin Controlled)
+    // ------------------------------------------------------------------
+    function renderProjectMembers() {
+      const proj = getCurrentProject();
+      const select = document.getElementById('assign-user-select');
+      const list = document.getElementById('project-members-list');
+      if (!proj) return;
+
+      const availableUsers = AppState.users.filter(u => !proj.members.includes(u.username));
+      select.innerHTML = availableUsers.map(u => `<option value="${escapeHtml(u.username)}">${escapeHtml(u.username)} (${u.role})</option>`).join('');
+
+      const canManage = isCurrentUserProjectLead(proj);
+
+      list.innerHTML = proj.members.map(m => {
+        const isLead = m === proj.leadDeveloper;
+        return `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-[#101114] border border-[#22242c]">
+            <div class="flex items-center gap-2.5">
+              <span class="w-6 h-6 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">${m[0]?.toUpperCase()}</span>
+              <div>
+                <div class="text-xs font-semibold text-white flex items-center gap-1.5">
+                  <span>${escapeHtml(m)}</span>
+                  ${isLead ? '<span class="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.2 rounded font-bold">LEAD</span>' : ''}
+                </div>
+              </div>
+            </div>
+            ${canManage && !isLead ? `<button onclick="removeMemberFromProject('${escapeHtml(m)}')" class="text-xs text-zinc-500 hover:text-rose-400">Remove</button>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function assignUserToCurrentProject() {
+      const proj = getCurrentProject();
+      if (!proj) return;
+      if (!isCurrentUserProjectLead(proj)) {
+        showToast("Only the Lead Developer or Admin can add members.", "error");
+        return;
+      }
+
+      const select = document.getElementById('assign-user-select');
+      const username = select.value;
+      if (!username) return;
+
+      if (!proj.members.includes(username)) {
+        proj.members.push(username);
+        saveState();
+
+        if (supabaseClient) {
+          await supabaseClient.from('projects').update({ members: proj.members }).eq('id', proj.id);
+        }
+
+        renderProjectMembers();
+        renderChatMessages();
+        showToast(`Added ${username} to project`, 'success');
+      }
+    }
+
+    async function removeMemberFromProject(username) {
+      const proj = getCurrentProject();
+      if (!proj) return;
+      if (!isCurrentUserProjectLead(proj)) {
+        showToast("Only the Lead Developer or Admin can remove members.", "error");
+        return;
+      }
+      if (username === proj.leadDeveloper) {
+        showToast("The Lead Developer cannot be removed from their own project.", "error");
+        return;
+      }
+
+      proj.members = proj.members.filter(m => m !== username);
+      saveState();
+
+      if (supabaseClient) {
+        await supabaseClient.from('projects').update({ members: proj.members }).eq('id', proj.id);
+      }
+
+      renderProjectMembers();
+      renderChatMessages();
+      renderProjectsSidebar();
+      showToast(`Removed ${username} from project`, 'info');
     }
 
     async function updateProjectName(val) {
       if (!val.trim()) return;
       const proj = getCurrentProject();
+      if (!proj) return;
       proj.name = val.trim();
-      saveWorkspace();
+      saveState();
+
       if (supabaseClient) {
-        try { await supabaseClient.from('projects').update({ name: proj.name }).eq('id', proj.id); } catch(e){}
+        await supabaseClient.from('projects').update({ name: proj.name }).eq('id', proj.id);
       }
+
       syncProjectHeader();
       renderProjectsSidebar();
-    }
-
-    async function updateProjectDuration(val) {
-      const proj = getCurrentProject();
-      proj.sprintDuration = val;
-      saveWorkspace();
-      if (supabaseClient) {
-        try { await supabaseClient.from('projects').update({ sprint_duration: proj.sprintDuration }).eq('id', proj.id); } catch(e){}
-      }
-      syncProjectHeader();
-      renderDashboardMetrics();
+      showToast('Project renamed', 'info');
     }
 
     async function updateProjectDesc(val) {
       const proj = getCurrentProject();
+      if (!proj) return;
       proj.description = val.trim();
-      saveWorkspace();
+      saveState();
+
       if (supabaseClient) {
-        try { await supabaseClient.from('projects').update({ description: proj.description }).eq('id', proj.id); } catch(e){}
+        await supabaseClient.from('projects').update({ description: proj.description }).eq('id', proj.id);
       }
     }
 
     async function updateProjectColor(val) {
       const proj = getCurrentProject();
+      if (!proj) return;
       proj.color = val;
       document.getElementById('setting-color-label').innerText = val.toUpperCase();
-      saveWorkspace();
+      saveState();
+
       if (supabaseClient) {
-        try { await supabaseClient.from('projects').update({ color: proj.color }).eq('id', proj.id); } catch(e){}
+        await supabaseClient.from('projects').update({ color: proj.color }).eq('id', proj.id);
       }
+
       renderProjectsSidebar();
+      showToast('Theme color updated', 'info');
     }
 
-    function clearAllData() {
-      if (confirm('Clear browser cache and reload? This will resync from Supabase.')) {
-        localStorage.removeItem(STORAGE_KEY);
-        sessionStorage.removeItem(AUTH_SESSION_KEY);
-        sessionStorage.removeItem(PASSWORDS_REVEALED_KEY);
-        location.reload();
+    // ------------------------------------------------------------------
+    // RESTRICTED PROJECT DELETION
+    // ------------------------------------------------------------------
+    function triggerProjectDeletion() {
+      const proj = getCurrentProject();
+      if (!proj) return;
+
+      if (!isCurrentUserProjectLead(proj)) {
+        showToast("Permission Denied: Only this project's Lead Developer can delete it.", "error");
+        return;
       }
+
+      showConfirmModal('Delete Project', `Permanently delete project "${proj.name}" and all of its tasks?`, async () => {
+        AppState.tasks = AppState.tasks.filter(t => t.projectId !== proj.id);
+        delete AppState.projectMessages[proj.id];
+        AppState.projects = AppState.projects.filter(p => p.id !== proj.id);
+
+        if (supabaseClient) {
+          await supabaseClient.from('projects').delete().eq('id', proj.id);
+        }
+
+        ensureActiveProjectValid();
+        saveState();
+        syncProjectHeader();
+        renderProjectsSidebar();
+        renderTasksFeed();
+        renderDashboardMetrics();
+        renderProjectMembers();
+        renderChatMessages();
+        showToast('Project deleted successfully', 'info');
+      });
+    }
+
+    function triggerResetWorkspace() {
+      showConfirmModal('Reset All Data', 'Reset workspace database to default factory settings? All user accounts and tasks will be erased.', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(SESSION_KEY);
+        location.reload();
+      });
+    }
+
+    // ------------------------------------------------------------------
+    // SUPER-ADMIN HUB (atlantis8998)
+    // ------------------------------------------------------------------
+    function renderAdminHub() {
+      document.getElementById('stat-total-users').innerText = AppState.users.length;
+      document.getElementById('stat-total-projects').innerText = AppState.projects.length;
+      document.getElementById('stat-total-tasks').innerText = AppState.tasks.length;
+      document.getElementById('admin-user-count').innerText = `Total: ${AppState.users.length}`;
+
+      const tbody = document.getElementById('admin-user-table-body');
+      tbody.innerHTML = AppState.users.map(u => `
+        <tr class="hover:bg-[#16171d] transition">
+          <td class="px-6 py-3 font-medium text-white flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-full bg-amber-600 text-xs flex items-center justify-center font-bold text-white shrink-0">${u.username[0].toUpperCase()}</span>
+            <div>
+              <div class="font-bold">${escapeHtml(u.username)}</div>
+              <div class="text-[10px] text-zinc-500">${u.username === 'atlantis8998' ? 'Super Admin' : 'Standard Member'}</div>
+            </div>
+          </td>
+          <td class="px-6 py-3">
+            <input type="text" value="${escapeHtml(u.password)}" onchange="adminUpdatePassword('${escapeHtml(u.username)}', this.value)" class="bg-[#101114] border border-[#272932] rounded px-2.5 py-1 text-xs text-zinc-300 font-mono focus:outline-none focus:border-amber-500"/>
+          </td>
+          <td class="px-6 py-3">
+            <select onchange="adminUpdateRole('${escapeHtml(u.username)}', this.value)" ${u.username === 'atlantis8998' ? 'disabled' : ''} class="bg-[#101114] border border-[#272932] rounded px-2.5 py-1 text-xs text-zinc-300 focus:outline-none ${u.username === 'atlantis8998' ? 'opacity-60 cursor-not-allowed' : ''}">
+              <option value="Administrator" ${u.role === 'Administrator' ? 'selected' : ''}>Administrator</option>
+              <option value="Developer" ${u.role === 'Developer' ? 'selected' : ''}>Developer</option>
+              <option value="DevOps" ${u.role === 'DevOps' ? 'selected' : ''}>DevOps</option>
+              <option value="Viewer" ${u.role === 'Viewer' ? 'selected' : ''}>Viewer</option>
+            </select>
+          </td>
+          <td class="px-6 py-3 text-right">
+            ${u.username !== 'atlantis8998' ? `<button onclick="adminDeleteUser('${escapeHtml(u.username)}')" class="text-rose-400 hover:text-rose-300 text-xs font-semibold px-2 py-1 rounded hover:bg-rose-500/10 transition">Delete</button>` : '<span class="text-zinc-600 text-[11px] font-mono">Protected</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function handleCreateUser(e) {
+      e.preventDefault();
+      const user = document.getElementById('admin-new-username').value.trim();
+      const pass = document.getElementById('admin-new-password').value.trim();
+      const role = document.getElementById('admin-new-role').value;
+
+      if (!user || !pass) return;
+
+      if (AppState.users.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+        showToast('An account with this username already exists.', 'error');
+        return;
+      }
+
+      AppState.users.push({ username: user, password: pass, role: role });
+      saveState();
+
+      document.getElementById('admin-new-username').value = '';
+      document.getElementById('admin-new-password').value = '';
+      renderAdminHub();
+      renderProjectMembers();
+      showToast(`User account "${user}" created!`, 'success');
+    }
+
+    function adminUpdatePassword(username, newPass) {
+      const u = AppState.users.find(x => x.username === username);
+      if (u && newPass.trim()) {
+        u.password = newPass.trim();
+        saveState();
+        showToast(`Updated password for ${username}`, 'success');
+      }
+    }
+
+    function adminUpdateRole(username, newRole) {
+      const u = AppState.users.find(x => x.username === username);
+      if (u) {
+        u.role = newRole;
+        saveState();
+        showToast(`Updated ${username}'s role to ${newRole}`, 'info');
+      }
+    }
+
+    function adminDeleteUser(username) {
+      showConfirmModal('Delete Account', `Delete account "${username}" and revoke all workspace access?`, () => {
+        AppState.users = AppState.users.filter(u => u.username !== username);
+        AppState.projects.forEach(p => { p.members = p.members.filter(m => m !== username); });
+        saveState();
+        renderAdminHub();
+        renderProjectMembers();
+        showToast(`User "${username}" deleted`, 'info');
+      });
+    }
+
+    async function adminPurgeDoneTasks() {
+      showConfirmModal('Purge Completed Tasks', 'Remove all tasks marked "Done" across all workspace projects?', async () => {
+        const originalCount = AppState.tasks.length;
+        AppState.tasks = AppState.tasks.filter(t => t.status !== 'Done');
+        saveState();
+
+        if (supabaseClient) {
+          await supabaseClient.from('tasks').delete().eq('status', 'Done');
+        }
+
+        renderTasksFeed();
+        renderDashboardMetrics();
+        renderAdminHub();
+        showToast(`Purged ${originalCount - AppState.tasks.length} completed tasks!`, 'success');
+      });
+    }
+
+    function adminExportWorkspace() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(AppState, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `vandrik_workspace_backup_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Workspace backup JSON downloaded!', 'success');
     }
 
     function escapeHtml(str) {
